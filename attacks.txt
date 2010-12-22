@@ -1,0 +1,17 @@
+   In Ta Ar AA Tr De Su Ba Ca Fi-l Fi-a Bo-l Bo-a
+In 0  +1 +2 +2 +2 -1 +1 -1 +1 +1   X    +1   X
+Ta +1 0  +2 +2 +2 0  +1 0  +1 +1   X    +1   X
+Ar -1 -1 0  0  +1 -1 +1 -1 +1 +1   X    +1   X
+Ar +2 +1 +2 +2 +2 +1 X  0  +1 +2   X    +2   X      bombard
+AA -1 -1 0  0  +1 -1 +1 -1 +1 +1   X    +1   X
+AA X  X  X  X  X  X  X  X  X  X    +2   X    +2     bombard
+Tr X  X  X  X  X  X  X  X  X  X    X    X    X
+De X  X  X  X  X  X  +2 0  0  X    +1   X    +1
+Su X  X  X  X  +2 +1 0  +1 +1 X    X    X    X      sneak
+Su X  X  X  X  +2 -1 0  +1 +1 X    X    X    X
+Ba X  X  X  X  +2 +2 +1 0  +1 X    X    X    X
+Ba +2 +1 +2 +2 +2 +1 X  0  +1 +2   X    +2   X      bombard
+Ca X  X  X  X  +1 -1 -1 -2 0  X    X    X    X
+Fi +1 +1 +1 0  +2 0  0  0  0  +2   0    +2   +1
+Bo +1 +1 +1 -1 +2 +1 +1 +1 +1 +2   -1   +2   0
+Bo 0  0  0  0  +1 0  0  0  0  0    X    0    X      bombing run
