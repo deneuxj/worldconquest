@@ -56,6 +56,13 @@
     <None Include="Script.fsx" />
     <None Include="XnaWinForm.fsx" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
+      <Name>ContentLibrary</Name>
+      <Project>{20424926-d417-4507-9171-c1d26783fd07}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

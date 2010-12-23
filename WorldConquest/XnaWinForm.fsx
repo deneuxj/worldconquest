@@ -5,6 +5,8 @@
 #r "Microsoft.Xna.Framework.dll"
 #r "Microsoft.Xna.Framework.Game.dll"
 
+//#r @"D:\Documents\WorldConquest\ContentLibrary\bin\x86\Debug\ContentLibrary.dll"
+
 open System.Windows.Forms
 open Microsoft.Xna.Framework
 
@@ -45,3 +47,21 @@ type XnaForm() =
 
     member this.DisableAnimation() =
         Application.Idle.RemoveHandler(animationHandler)
+
+let form = new XnaForm()
+form.Show()
+let content = new Content.ContentManager(form.XnaControl.Services)
+content.RootDirectory <- @"D:\Documents\WorldConquest\ContentLibrary\bin\x86\Debug\Content"
+
+let units : Graphics.Texture2D = content.Load("units")
+
+let batch = new Graphics.SpriteBatch(form.XnaControl.GraphicsDevice)
+
+let draw _ =
+    try
+        batch.Begin()
+        batch.Draw(units, Vector2.Zero, Color.White)
+    finally
+        batch.End()
+
+form.XnaControl.Drawer <- draw
