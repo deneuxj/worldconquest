@@ -59,16 +59,18 @@ form.Show()
 let content = new Content.ContentManager(form.XnaControl.Services)
 content.RootDirectory <- @"D:\Documents\WorldConquest\ContentLibrary\bin\x86\Debug\Content"
 
-let newTerrain() =
-    let jagged_k = 0.5f
-    let land_mass = 0.25f
+let jagged_k = ref 0.75f
+let land_mass = ref 0.25f
+let terr_size = ref 64
 
-    let heights = makeTerrain 64 64 jagged_k
-    let sea_level = findLevel land_mass heights
+let newTerrain() =
+    let heights = makeTerrain !terr_size !terr_size !jagged_k
+    let sea_level = findLevel !land_mass heights
     toTerrain sea_level heights
 
 let terr = newTerrain() |> ref
 let orig = Vector2.Zero |> ref
+let zoom = ref 1.0f
 
 let last_mouse_pos = ref None
 
@@ -97,13 +99,19 @@ form.XnaControl.KeyDown.Add(fun kev ->
         | Keys.Space ->
             orig := Vector2.Zero
             true
+        | Keys.A ->
+            zoom := min (!zoom * 2.0f) 2.0f
+            true
+        | Keys.Z ->
+            zoom := max (!zoom / 2.0f) 0.125f
+            true
         | Keys.N ->
             terr := newTerrain()
             true
         | _ -> false
 
     if kev.Handled then
-        form.Invalidate()
+        form.XnaControl.Invalidate()
 )
 
 let units : Graphics.Texture2D = content.Load("units")
@@ -113,18 +121,19 @@ let sea_src_rect = new Rectangle(X=464, Y=162, Width=40, Height=48) |> sn
  
 let batch = new Graphics.SpriteBatch(form.XnaControl.GraphicsDevice)
 
-let drawTile src_rect orig (x, y) =
+let drawTile src_rect (x, y) =
     let x =
         if y % 2 = 0 then
-            x * 40
+            (float32 x) * 40.0f
         else
-            x * 40 + 20
-        |> float32
+            (float32 x) * 40.0f + 20.0f
 
-    let y = y * 36 |> float32
+        * !zoom
+    let y = (float32 y) * 36.0f * !zoom
             
-    let dst_pos = new Vector2(x, y) - orig
-    batch.Draw(tiles, dst_pos, src_rect, Color.White)
+    let dst_pos = new Vector2(x, y) - !orig * !zoom
+    let dst_rect = new Rectangle(X = (dst_pos.X |> int), Y = (dst_pos.Y |> int), Width = (40.0f * !zoom |> int), Height = (48.0f * !zoom |> int))
+    batch.Draw(tiles, dst_rect, src_rect, Color.White)
 
 let drawLand = drawTile land_src_rect
 
@@ -136,8 +145,8 @@ let drawTerrain _ =
         for j in 0..(Array2D.length2 !terr)-1 do
             for i in 0..(Array2D.length1 !terr)-1 do
                 match (!terr).[i,j] with
-                | Land -> drawLand !orig (i, j)
-                | Sea -> drawSea !orig (i, j)
+                | Land -> drawLand (i, j)
+                | Sea -> drawSea (i, j)
     finally
         batch.End()
 
