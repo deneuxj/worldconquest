@@ -52,9 +52,11 @@
     <Compile Include="HexTiling.fs" />
     <Compile Include="Units.fs" />
     <Compile Include="Terrain.fs" />
+    <Compile Include="DegreeRegions.fs" />
     <Compile Include="Resource.fs" />
     <None Include="Script.fsx" />
     <None Include="XnaWinForm.fsx" />
+    <None Include="CoopMultiTasking.fsx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
