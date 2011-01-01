@@ -46,6 +46,9 @@
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="XNAUtils">
+      <HintPath>..\..\xnautils\XNAUtils\bin\Release\XNAUtils.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GeneticOptimization.fs" />

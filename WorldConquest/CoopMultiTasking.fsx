@@ -1,4 +1,8 @@
-﻿type Eventually<'R> =
+﻿#r @"D:\Documents\xnautils\xnautils\bin\release\XNAUtils.dll"
+
+open XNAUtils.Heap
+
+type Eventually<'R> =
     | Completed of 'R
     | Blocked of float32 * (unit -> Eventually<'R>)
     | Running of (unit -> Eventually<'R>)
@@ -93,6 +97,46 @@ let waitCond f = task {
         do! next()
 }
 
+type Lock() =
+    let mutable locked = false;
+
+    member this.Grab() =
+        task {
+            do! waitCond (fun() -> not locked)
+            locked <- true
+        }
+
+    member this.Release() =
+        task {
+            locked <- false
+        }
+
+type BlockingChannel<'M>() =
+    let mutable content = None
+    let mutable flag_send = false
+    let mutable flag_receive = false
+
+    member this.Send(m : 'M) =
+        task {
+            do! waitCond (fun () -> not flag_send)
+            content <- Some m
+            flag_send <- true
+            do! waitCond (fun () -> flag_receive)
+            flag_send <- false
+            content <- None
+        }
+
+    member this.Read() =
+        task {
+            do! waitCond (fun () -> flag_send)
+            let ret = content.Value
+            flag_receive <- true
+            do! waitCond (fun () -> not flag_send)
+            flag_receive <- false
+            return ret
+        }
+
+        
 (* Simulation *)
 let step dt = function
     | Completed(r) as v -> (v, dt)
@@ -104,7 +148,7 @@ let step dt = function
     | Running(f) ->
         (f(), dt)
     | Yield(f) ->
-        (Running(f), 0.0f)
+        (Running(f), dt)
 
 let hasCompleted = function
     | Completed _ -> true
@@ -113,7 +157,67 @@ let hasCompleted = function
 let isBlocked = function
     | Blocked _ | Yield _ -> true
     | _ -> false
+
+let isRunning = function
+    | Running _ -> true
+    | _ -> false
+
+(* Execution *)
+
+type Scheduler() =
+    let tasks : Heap<Eventually<unit>> = newHeap 4
+
+    let cmp (ev1, ev2) =
+        match ev1, ev2 with
+        | Running _, Running _ -> false
+        | Running _, _ -> true
+        | Yield _, Running _ | Yield _, Yield _ -> false
+        | Yield _, _ -> true
+        | Blocked _, Running _ | Blocked _, Yield _ -> false
+        | Blocked (t1, _), Blocked (t2, _) -> t1 < t2
+        | Completed _, _ -> false
+        | _, Completed _ -> true
+
+    member x.AddTask(t) =
+        insert cmp tasks t
     
+    member x.HasLiveTasks =
+        tasks.count > 0
+        &&
+        tasks.arr.[0..tasks.count-1]
+        |> Array.exists (function Completed _ -> false | _ -> true)
+
+    member x.RunFor(dt) =
+        let decrBlockingTimes delta =
+            for i in 0..tasks.count-1 do
+                tasks.arr.[i] <-
+                    match tasks.arr.[i] with
+                    | Yield _ | Running _ -> failwith "All tasks should be blocked."
+                    | Blocked (t, f) -> Blocked (t-delta, f)
+                    | Completed () as v -> v
+
+        let rec work dt =
+            if dt > 0.0f && tasks.count > 0 then
+                let t = take cmp tasks
+                match t with
+                | Yield f | Running f ->
+                    f()
+                    |> insert cmp tasks
+                    work dt
+                | Completed () ->
+                    work dt
+                | Blocked (t, f) when t < dt ->
+                    decrBlockingTimes t
+                    f()
+                    |> insert cmp tasks
+                    work (dt - t)
+                | Blocked _ ->
+                    insert cmp tasks t
+                    decrBlockingTimes dt
+                    ()
+                    
+        work dt
+
 let stepUntilBlocked dt ev =
     let ev, dt = step dt ev
     let mutable ev = ev
@@ -139,26 +243,13 @@ let runAllCompressed evs =
     |> Array.map (function Completed r -> r | _ -> failwith "Unreachable")
 
 let runAllFixed dt evs =
-    let mutable state = evs
+    let scheduler = new Scheduler()
+    
+    evs
+    |> Array.iter (fun t -> scheduler.AddTask(t))
 
-    printfn "%A" state
-    while not (state |> Array.forall hasCompleted) do
-        state <-
-            state
-            |> Array.mapi
-                (fun i s ->
-                    printfn "Task %d>" i
-                    let mutable dt = dt
-                    let mutable s = s
-                    while dt > 0.0f && not (hasCompleted s) do
-                        let s', dt' = step dt s
-                        dt <- dt'
-                        s <- s'
-                    s)
-        printfn "%A" state
-    state
-    |> Array.map (function Completed r -> r | _ -> failwith "Unreachable")
-
+    while scheduler.HasLiveTasks do
+        scheduler.RunFor(dt)
 
 let toEventuallyObj ev = task {
     let! res = ev
