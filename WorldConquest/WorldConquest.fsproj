@@ -59,7 +59,6 @@
     <Compile Include="Resource.fs" />
     <None Include="Script.fsx" />
     <None Include="XnaWinForm.fsx" />
-    <None Include="CoopMultiTasking.fsx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
