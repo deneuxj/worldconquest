@@ -1,6 +1,6 @@
-﻿#r @"D:\Documents\WinForms\WinFormsGraphicsDevice\bin\Release\WinFormsGraphicsDevice.exe"
+﻿#r @"C:\Users\johann\Documents\Visual Studio 2010\Projects\WinFormsGraphicsSample_4_0\WinFormsGraphicsDevice\bin\Release\WinFormsGraphicsDevice.exe"
 
-#I @"C:\Program Files\Microsoft XNA\XNA Game Studio\v4.0\References\Windows\x86"
+#I @"C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v4.0\References\Windows\x86"
 #r "Microsoft.Xna.Framework.Graphics.dll"
 #r "Microsoft.Xna.Framework.dll"
 #r "Microsoft.Xna.Framework.Game.dll"
@@ -57,7 +57,7 @@ let sn x = System.Nullable<_>(x)
 let form = new XnaForm()
 form.Show()
 let content = new Content.ContentManager(form.XnaControl.Services)
-content.RootDirectory <- @"D:\Documents\WorldConquest\ContentLibrary\bin\x86\Debug\Content"
+content.RootDirectory <- @"C:\Users\johann\Documents\WorldConquest\worldconquest\ContentLibrary\bin\x86\Debug\Content"
 
 let jagged_k = ref 0.75f
 let land_mass = ref 0.25f
