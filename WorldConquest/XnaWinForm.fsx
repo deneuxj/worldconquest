@@ -9,6 +9,7 @@
 #load "HexTiling.fs"
 #load "Terrain.fs"
 #load "Resource.fs"
+#load "DegreeRegions.fs"
 
 open System.Windows.Forms
 open Microsoft.Xna.Framework
@@ -69,6 +70,7 @@ let newTerrain() =
     toTerrain sea_level heights
 
 let terr = newTerrain() |> ref
+let regions = DegreeRegions.markRegions !terr |> ref
 let orig = Vector2.Zero |> ref
 let zoom = ref 1.0f
 
@@ -100,13 +102,14 @@ form.XnaControl.KeyDown.Add(fun kev ->
             orig := Vector2.Zero
             true
         | Keys.A ->
-            zoom := min (!zoom * 2.0f) 2.0f
+            zoom := min (!zoom * 1.25f) 2.0f
             true
         | Keys.Z ->
-            zoom := max (!zoom / 2.0f) 0.125f
+            zoom := max (!zoom / 1.25f) 0.125f
             true
         | Keys.N ->
             terr := newTerrain()
+            regions := DegreeRegions.markRegions !terr
             true
         | _ -> false
 
@@ -116,12 +119,14 @@ form.XnaControl.KeyDown.Add(fun kev ->
 
 let units : Graphics.Texture2D = content.Load("units")
 let tiles : Graphics.Texture2D = content.Load("tiles")
+let font : Graphics.SpriteFont = content.Load("font")
+
 let land_src_rect = new Rectangle(X=86, Y=162, Width=40, Height=48) |> sn
 let sea_src_rect = new Rectangle(X=464, Y=162, Width=40, Height=48) |> sn
  
 let batch = new Graphics.SpriteBatch(form.XnaControl.GraphicsDevice)
 
-let drawTile src_rect (x, y) =
+let getDestPos(x, y) =
     let x =
         if y % 2 = 0 then
             (float32 x) * 40.0f
@@ -131,9 +136,27 @@ let drawTile src_rect (x, y) =
         * !zoom
     let y = (float32 y) * 36.0f * !zoom
             
-    let dst_pos = new Vector2(x, y) - !orig * !zoom
-    let dst_rect = new Rectangle(X = (dst_pos.X |> int), Y = (dst_pos.Y |> int), Width = (40.0f * !zoom |> int), Height = (48.0f * !zoom |> int))
+    new Vector2(x, y) - !orig * !zoom
+
+let getDestRect(dst_pos : Vector2) =
+    new Rectangle(X = (dst_pos.X |> int), Y = (dst_pos.Y |> int), Width = (40.0f * !zoom |> int), Height = (48.0f * !zoom |> int))
+
+let drawTile src_rect (x, y) =
+    let dst_pos = getDestPos(x, y)
+    let dst_rect = getDestRect(dst_pos)
     batch.Draw(tiles, dst_rect, src_rect, Color.White)
+
+type Graphics.SpriteBatch with
+    member x.DrawString(font : Graphics.SpriteFont, txt : string, pos : Vector2, color : Color, scale : float32) =
+        x.DrawString(font, txt, pos, color, 0.0f, Vector2.Zero, scale, Graphics.SpriteEffects.None, 0.0f)
+
+let drawText (txt : string) (x, y) =
+    let text_sz = font.MeasureString(txt)
+    let off_x = !zoom * (40.0f - text_sz.X) / 2.0f
+    let off_y = !zoom * (48.0f - text_sz.Y) / 2.0f
+    let pos = getDestPos(x, y)
+
+    batch.DrawString(font, txt, new Vector2(pos.X + off_x, pos.Y + off_y), Color.Yellow, !zoom)
 
 let drawLand = drawTile land_src_rect
 
@@ -150,4 +173,14 @@ let drawTerrain _ =
     finally
         batch.End()
 
-form.XnaControl.Drawer <- drawTerrain
+
+let drawRegions _ =
+    try
+        batch.Begin()
+        for j in 0..(Array2D.length2 !regions)-1 do
+            for i in 0..(Array2D.length1 !regions)-1 do
+                drawText ((!regions).[i, j].ToString()) (i, j)
+    finally
+        batch.End()
+    
+form.XnaControl.Drawer <- fun _ -> drawTerrain() ; drawRegions()
