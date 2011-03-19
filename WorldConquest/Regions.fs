@@ -1,7 +1,12 @@
-﻿module DegreeRegions
+﻿module Regions
 
 open Terrain
 open HexTiling
+
+type RegionInfo =
+    { id : int
+      category : Terrain
+      size : int }
 
 let markRegions (terr : Terrain[,]) =
     let width = Array2D.length1 terr
@@ -21,11 +26,13 @@ let markRegions (terr : Terrain[,]) =
     let mark(x, y, id) = marked.[x, y] <- id
 
     let paintFill c0 id =
+        let mutable num_tiles = 0
         let mutable working = [ c0 ]
         while not <| List.isEmpty working do
             let (SquareCoords(x, y) as c) = List.head working
             working <- List.tail working
             if markedIsFree(x, y) then
+                num_tiles <- num_tiles + 1
                 mark(x, y, id)
                 let terrain_type = terr.[x, y]
                 let same_ngbh =
@@ -33,12 +40,17 @@ let markRegions (terr : Terrain[,]) =
                     |> nbrsOf
                     |> List.filter (fun (SquareCoords(x', y')) -> terr.[x', y'] = terrain_type && markedIsFree(x', y'))
                 working <- working @ same_ngbh
+        num_tiles
 
-    let mutable id = 0
-    for y in 0..height-1 do
-        for x in 0..width-1 do
-            if markedIsFree(x, y) then
-                paintFill (SquareCoords(x, y)) id
-                id <- id + 1
+    let id = ref 0
+    let area_infos =
+        [|
+            for y in 0..height-1 do
+                for x in 0..width-1 do
+                    if markedIsFree(x, y) then
+                        let num_tiles = paintFill (SquareCoords(x, y)) !id
+                        yield { id = !id; category = terr.[x, y]; size = num_tiles }
+                        id := !id + 1
+        |]
 
-    marked
+    marked, area_infos

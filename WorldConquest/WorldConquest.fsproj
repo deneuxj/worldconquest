@@ -55,10 +55,11 @@
     <Compile Include="HexTiling.fs" />
     <Compile Include="Units.fs" />
     <Compile Include="Terrain.fs" />
-    <Compile Include="DegreeRegions.fs" />
+    <Compile Include="Regions.fs" />
     <Compile Include="Resource.fs" />
     <None Include="Script.fsx" />
     <None Include="XnaWinForm.fsx" />
+    <Compile Include="MapCreation.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
