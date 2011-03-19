@@ -9,7 +9,7 @@
 #load "HexTiling.fs"
 #load "Terrain.fs"
 #load "Resource.fs"
-#load "DegreeRegions.fs"
+#load "Regions.fs"
 
 open System.Windows.Forms
 open Microsoft.Xna.Framework
@@ -70,7 +70,7 @@ let newTerrain() =
     toTerrain sea_level heights
 
 let terr = newTerrain() |> ref
-let regions = DegreeRegions.markRegions !terr |> ref
+let regions = Regions.markRegions !terr |> ref
 let orig = Vector2.Zero |> ref
 let zoom = ref 1.0f
 
@@ -109,7 +109,7 @@ form.XnaControl.KeyDown.Add(fun kev ->
             true
         | Keys.N ->
             terr := newTerrain()
-            regions := DegreeRegions.markRegions !terr
+            regions := Regions.markRegions !terr
             true
         | _ -> false
 
@@ -177,9 +177,12 @@ let drawTerrain _ =
 let drawRegions _ =
     try
         batch.Begin()
-        for j in 0..(Array2D.length2 !regions)-1 do
-            for i in 0..(Array2D.length1 !regions)-1 do
-                drawText ((!regions).[i, j].ToString()) (i, j)
+        let region_map, regions = !regions
+        let width = getWidth region_map
+        let height = getHeight region_map
+        for y in 0..height-1 do
+            for x in 0..width-1 do
+                drawText (region_map.[x, y].ToString()) (x, y)
     finally
         batch.End()
     

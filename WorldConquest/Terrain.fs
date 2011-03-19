@@ -1,17 +1,10 @@
 ﻿module Terrain
 
+open HexTiling
+
 type Terrain =
     | Land
     | Sea
-
-type InstallationCategory =
-    | Town
-    | Harbour
-    | Airport
-
-type Installation =
-    {  owner : int option
-       category : InstallationCategory  }
 
 let makeTerrain (width : int) (height : int) (jagged_k) =
     let rnd = new System.Random()
@@ -114,3 +107,26 @@ let findLevel (land_part : float32) terr =
 let toTerrain (level) (terr) =
     terr
     |> Array2D.map (fun h -> if h >= level then Land else Sea)
+
+let getWidth = Array2D.length1
+
+let getHeight = Array2D.length2
+
+// Access tiles by their coordinates
+//  Square coordinates
+let setSq (terr : 'T[,]) (SquareCoords(x, y)) t =
+    terr.[x, y] <- t
+
+let getSq (terr : 'T[,]) (SquareCoords(x, y)) =
+    terr.[x, y]
+
+//  Hexagonal coordinates
+let setHex (terr : 'T[,]) (c : HexCoords) t =
+    let c = fromHex c
+
+    setSq terr c t
+
+let getHex (terr : 'T[,]) (c : HexCoords) =
+    let c = fromHex c
+
+    getSq terr c
