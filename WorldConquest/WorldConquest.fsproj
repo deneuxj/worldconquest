@@ -46,22 +46,26 @@
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="XNAUtils">
-      <HintPath>..\..\xnautils\XNAUtils\bin\Release\XNAUtils.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PathFinding.fs" />
     <Compile Include="GeneticOptimization.fs" />
     <Compile Include="HexTiling.fs" />
     <Compile Include="Units.fs" />
     <Compile Include="Terrain.fs" />
     <Compile Include="Regions.fs" />
     <Compile Include="Resource.fs" />
+    <Compile Include="MapCreation.fs" />
+    <Compile Include="GameState.fs" />
     <None Include="Script.fsx" />
     <None Include="XnaWinForm.fsx" />
-    <Compile Include="MapCreation.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\xnautils\XNAUtils\XNAUtils.fsproj">
+      <Name>XNAUtils</Name>
+      <Project>{ebfab7eb-ff0b-4de3-842b-bab06dcd3d42}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\ContentLibrary\ContentLibrary.csproj">
       <Name>ContentLibrary</Name>
       <Project>{20424926-d417-4507-9171-c1d26783fd07}</Project>
