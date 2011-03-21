@@ -10,10 +10,13 @@
 #load "Terrain.fs"
 #load "Resource.fs"
 #load "Regions.fs"
+#load "MapCreation.fs"
 
 open System.Windows.Forms
 open Microsoft.Xna.Framework
+
 open Terrain
+open HexTiling
 
 type XnaControl() =
     inherit WinFormsGraphicsDevice.GraphicsDeviceControl()
@@ -71,6 +74,8 @@ let newTerrain() =
 
 let terr = newTerrain() |> ref
 let regions = Regions.markRegions !terr |> ref
+let resources = MapCreation.mkResources !terr |> ref
+
 let orig = Vector2.Zero |> ref
 let zoom = ref 1.0f
 
@@ -110,6 +115,7 @@ form.XnaControl.KeyDown.Add(fun kev ->
         | Keys.N ->
             terr := newTerrain()
             regions := Regions.markRegions !terr
+            resources := MapCreation.mkResources !terr
             true
         | _ -> false
 
@@ -123,7 +129,13 @@ let font : Graphics.SpriteFont = content.Load("font")
 
 let land_src_rect = new Rectangle(X=86, Y=162, Width=40, Height=48) |> sn
 let sea_src_rect = new Rectangle(X=464, Y=162, Width=40, Height=48) |> sn
- 
+let oil_src_rect = new Rectangle(X=2, Y=383, Width=40, Height=48) |> sn
+let wood_src_rect = new Rectangle(X=380, Y=162, Width=40, Height=48) |> sn
+let iron_src_rect = new Rectangle(X=170, Y=235, Width=40, Height=48) |> sn
+let factory_src_rect = new Rectangle(X=254, Y=384, Width=40, Height=48) |> sn
+let airfield_src_rect = new Rectangle(X=348, Y=108, Width=20, Height=8) |> sn
+let harbour_src_rect = new Rectangle(X=128, Y=311, Width=40, Height=48) |> sn
+
 let batch = new Graphics.SpriteBatch(form.XnaControl.GraphicsDevice)
 
 let getDestPos(x, y) =
@@ -185,5 +197,36 @@ let drawRegions _ =
                 drawText (region_map.[x, y].ToString()) (x, y)
     finally
         batch.End()
-    
-form.XnaControl.Drawer <- fun _ -> drawTerrain() ; drawRegions()
+
+let drawResource rsc_filter src_rect =
+    try
+        batch.Begin()
+        let resources =
+            !resources
+            |> Array.filter (fun (_, r) -> rsc_filter r)
+            |> Seq.map (fun (c, _) -> c)
+
+        for (SquareCoords(x, y)) in resources do
+            drawTile src_rect (x, y)
+    finally
+        batch.End()
+
+let drawOil() =
+    drawResource (function Resource.Oil -> true | _ -> false) oil_src_rect                 
+
+let drawWood() =
+    drawResource (function Resource.Wood -> true | _ -> false) wood_src_rect
+
+let drawIron() =
+    drawResource (function Resource.Iron -> true | _ -> false) iron_src_rect
+
+let drawFactory() =
+    drawResource (function Resource.Factory -> true | _ -> false) factory_src_rect
+
+let drawAirfield() =
+    drawResource (function Resource.Airfield -> true | _ -> false) airfield_src_rect
+
+let drawHarbour() =
+    drawResource (function Resource.Harbour -> true | _ -> false) harbour_src_rect
+
+form.XnaControl.Drawer <- fun _ -> drawTerrain() ; drawRegions() ; drawOil() ; drawWood() ; drawIron() ; drawFactory() ; drawAirfield() ; drawHarbour()

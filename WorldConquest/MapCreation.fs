@@ -65,13 +65,14 @@ let mkResources (terr : Terrain[,]) =
 
     let harbour_prob = 0.05
 
-    let uppers, _ =
+    let uppers =
         Array.zip probs rscs
         |> Array.fold (fun (uppers, s) (p, r) ->
             let s' = s + p
             ((s', r) :: uppers, s')
             )
             ([], 0.0)
+        |> fun (uppers, _) -> List.rev uppers
 
     let rec getResource x uppers =
         match uppers with
@@ -79,19 +80,20 @@ let mkResources (terr : Terrain[,]) =
         | _ :: rest -> getResource x rest
         | [] -> None
 
+    let width = getWidth terr
+    let height = getHeight terr
+
     let isCoastal c =
         (getSq terr c) = Land
         &&
         c
-        |> neighboursOfSq
+        |> getNeighboursSq width height
         |> List.exists (fun c' -> getSq terr c' <> Land)
 
     let rnd = new System.Random()
 
     let resources =
         [|
-            let width = getWidth terr
-            let height = getHeight terr
             for x in 0..width-1 do
                 for y in 0..height-1 do
                     let c = SquareCoords(x, y)

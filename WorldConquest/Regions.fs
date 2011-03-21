@@ -12,11 +12,7 @@ let markRegions (terr : Terrain[,]) =
     let width = Array2D.length1 terr
     let height = Array2D.length2 terr
 
-    let nbrsOf (SquareCoords(i, j) as c) =
-        c
-        |> neighboursOfSq
-        |> List.filter (fun (SquareCoords(i, j)) -> j >= 0 && j < height)
-        |> List.map (fun (SquareCoords(i, j)) -> SquareCoords((if i < 0 then width + i elif i >= width then i - width else i), j))
+    let nbrsOf = getNeighboursSq width height
 
     let marked =
         terr

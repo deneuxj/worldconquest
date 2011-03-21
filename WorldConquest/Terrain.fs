@@ -112,6 +112,12 @@ let getWidth = Array2D.length1
 
 let getHeight = Array2D.length2
 
+let getNeighboursSq width height (SquareCoords(i, j) as c) =
+    c
+    |> neighboursOfSq
+    |> List.filter (fun (SquareCoords(i, j)) -> j >= 0 && j < height)
+    |> List.map (fun (SquareCoords(i, j)) -> SquareCoords((if i < 0 then width + i elif i >= width then i - width else i), j))
+
 // Access tiles by their coordinates
 //  Square coordinates
 let setSq (terr : 'T[,]) (SquareCoords(x, y)) t =
