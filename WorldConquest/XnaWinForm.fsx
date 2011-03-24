@@ -79,6 +79,9 @@ let resources = MapCreation.mkResources !terr |> ref
 let orig = Vector2.Zero |> ref
 let zoom = ref 1.0f
 
+let cursor = ref <| SquareCoords(0, 0)
+let path_start : SquareCoords option ref = ref None
+
 let last_mouse_pos = ref None
 
 let mouseDragHandler =
@@ -100,6 +103,16 @@ form.XnaControl.MouseUp.Add(fun _ ->
     form.XnaControl.MouseMove.RemoveHandler(mouseDragHandler)
 )
 
+let (|CursorMoveKey|_|) (k : Keys) =
+    match k with
+    | Keys.E -> Some 0
+    | Keys.R -> Some 1
+    | Keys.S -> Some 2
+    | Keys.F -> Some 3
+    | Keys.X -> Some 4
+    | Keys.C -> Some 5
+    | _ -> None
+
 form.XnaControl.KeyDown.Add(fun kev ->
     kev.Handled <-
         match kev.KeyCode with
@@ -116,6 +129,15 @@ form.XnaControl.KeyDown.Add(fun kev ->
             terr := newTerrain()
             regions := Regions.markRegions !terr
             resources := MapCreation.mkResources !terr
+            true
+        | Keys.D ->
+            path_start :=
+                match !path_start with
+                | None -> Some !cursor
+                | Some _ -> None
+            true
+        | CursorMoveKey idx ->
+            cursor := neighboursOfSq !cursor |> fun x -> List.nth x idx
             true
         | _ -> false
 
@@ -135,6 +157,7 @@ let iron_src_rect = new Rectangle(X=170, Y=235, Width=40, Height=48) |> sn
 let factory_src_rect = new Rectangle(X=254, Y=384, Width=40, Height=48) |> sn
 let airfield_src_rect = new Rectangle(X=348, Y=108, Width=20, Height=8) |> sn
 let harbour_src_rect = new Rectangle(X=128, Y=311, Width=40, Height=48) |> sn
+let cursor_src_rect = new Rectangle(X=170, Y=458, Width=40, Height=48) |> sn
 
 let batch = new Graphics.SpriteBatch(form.XnaControl.GraphicsDevice)
 
@@ -229,4 +252,22 @@ let drawAirfield() =
 let drawHarbour() =
     drawResource (function Resource.Harbour -> true | _ -> false) harbour_src_rect
 
-form.XnaControl.Drawer <- fun _ -> drawTerrain() ; drawRegions() ; drawOil() ; drawWood() ; drawIron() ; drawFactory() ; drawAirfield() ; drawHarbour()
+let drawCursor() =
+    let (SquareCoords(x, y)) = !cursor
+    try
+        batch.Begin()
+        drawTile cursor_src_rect (x, y)
+    finally
+        batch.End()
+
+form.XnaControl.Drawer <-
+    fun _ ->
+        drawTerrain()
+        drawRegions()
+        drawOil()
+        drawWood()
+        drawIron()
+        drawFactory()
+        drawAirfield()
+        drawHarbour()
+        drawCursor()
