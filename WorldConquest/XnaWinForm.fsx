@@ -5,6 +5,9 @@
 #r "Microsoft.Xna.Framework.dll"
 #r "Microsoft.Xna.Framework.Game.dll"
 
+#r @"C:\Users\johann\Documents\xnautils\XNAUtils\bin\Debug\XNAUtils.dll"
+
+#load "PathFinding.fs"
 #load "GeneticOptimization.fs"
 #load "HexTiling.fs"
 #load "Terrain.fs"
@@ -137,7 +140,7 @@ form.XnaControl.KeyDown.Add(fun kev ->
                 | Some _ -> None
             true
         | CursorMoveKey idx ->
-            cursor := neighboursOfSq !cursor |> fun x -> List.nth x idx
+            cursor := neighboursOfSq !cursor |> fun x -> List.nth x idx |> wrapX !terr_size
             true
         | _ -> false
 
@@ -158,6 +161,7 @@ let factory_src_rect = new Rectangle(X=254, Y=384, Width=40, Height=48) |> sn
 let airfield_src_rect = new Rectangle(X=348, Y=108, Width=20, Height=8) |> sn
 let harbour_src_rect = new Rectangle(X=128, Y=311, Width=40, Height=48) |> sn
 let cursor_src_rect = new Rectangle(X=170, Y=458, Width=40, Height=48) |> sn
+let highlight_src_rect = new Rectangle(X=128, Y=381, Width=40, Height=48) |> sn
 
 let batch = new Graphics.SpriteBatch(form.XnaControl.GraphicsDevice)
 
@@ -260,6 +264,27 @@ let drawCursor() =
     finally
         batch.End()
 
+let drawPath() =
+    match !path_start with
+    | None -> ()
+    | Some start ->
+        let path =
+            PathFinding.find
+                (fun c -> distWrapSq !terr_size !cursor c |> float32)
+                (neighboursOfWrapSq !terr_size >> List.filter (Terrain.inRangeSq !terr) >> List.filter (Terrain.getSq !terr >> (=)(Terrain.getSq !terr start)))
+                (fun _ -> 1.0f)
+                start
+        match path with
+        | Some coords ->
+            try
+                batch.Begin()
+                for (SquareCoords(x, y)) in coords do
+                    drawTile highlight_src_rect (x, y)
+            finally
+                batch.End()
+        | None ->
+            ()
+
 form.XnaControl.Drawer <-
     fun _ ->
         drawTerrain()
@@ -271,3 +296,4 @@ form.XnaControl.Drawer <-
         drawAirfield()
         drawHarbour()
         drawCursor()
+        drawPath()

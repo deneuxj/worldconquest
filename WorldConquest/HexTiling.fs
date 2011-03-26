@@ -11,8 +11,8 @@ let toHex (SquareCoords(x, y)) : HexCoords =
     let x' = x - y / 2
     HexCoords(x', y)
 
-let dist (HexCoords(x0, y0) as c0) (HexCoords(x1, y1) as c1) : int =
-    let dx = x1 - x0
+let distDx getDx (HexCoords(x0, y0) as c0) (HexCoords(x1, y1) as c1) : int =
+    let dx = getDx x0 x1
     let dy = y1 - y0
 
     if dx < 0 && dy > 0 then
@@ -21,6 +21,22 @@ let dist (HexCoords(x0, y0) as c0) (HexCoords(x1, y1) as c1) : int =
         max dx -dy
     else
         abs(dx+dy)
+
+let dist = distDx (fun x0 x1 -> x1 - x0)
+
+let wrap w x0 x1 =
+    let w2 = w / 2
+    let dx = x1 - x0
+    if dx > w2 then dx - w
+    elif dx < -w2 then dx + w
+    else dx
+
+let distWrap w = distDx (wrap w)
+
+let distSq (c0 : SquareCoords) (c1 : SquareCoords) : int =
+    dist (toHex c0) (toHex c1)
+
+let distWrapSq w c0 c1 = distWrap w (toHex c0) (toHex c1)
 
 let neighboursOfSq (SquareCoords(i, j)) =
     let i0 = i-1
@@ -43,6 +59,17 @@ let neighboursOfSq (SquareCoords(i, j)) =
              (i1, j2); (i2, j2)
         ]
     |> List.map SquareCoords
+
+let wrapX w (SquareCoords(x, y)) =
+    let x =
+        if x < 0 then x + w
+        elif x >= w then x - w
+        else x
+    SquareCoords(x, y)
+
+let neighboursOfWrapSq w c0 =
+    neighboursOfSq c0
+    |> List.map (wrapX w)
 
 let neighboursOf (HexCoords(i, j)) =
     let i0 = i-1

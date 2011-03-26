@@ -126,6 +126,11 @@ let setSq (terr : 'T[,]) (SquareCoords(x, y)) t =
 let getSq (terr : 'T[,]) (SquareCoords(x, y)) =
     terr.[x, y]
 
+let inRangeSq (terr : 'T[,]) (SquareCoords(x, y)) =
+    0 <= x && x < terr.GetLength(0)
+    &&
+    0 <= y && y < terr.GetLength(1)
+
 //  Hexagonal coordinates
 let setHex (terr : 'T[,]) (c : HexCoords) t =
     let c = fromHex c
@@ -136,3 +141,6 @@ let getHex (terr : 'T[,]) (c : HexCoords) =
     let c = fromHex c
 
     getSq terr c
+
+let inRangeHex terr coords =
+    coords |> fromHex |> inRangeSq terr
