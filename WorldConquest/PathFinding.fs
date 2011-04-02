@@ -13,7 +13,8 @@ type Dictionary<'K, 'V> with
 let find (h : 'Coords -> float32) // Estimate of distance to the goal. Must satisfy h(x) = 0.0f iff x is a goal.
          (neighboursOf : 'Coords -> 'Coords list)
          (dist : 'Coords * 'Coords -> float32) // Distance between two neighbours. Typically always 1.0f, but can vary if movement costs are used.
-         (start : 'Coords) =
+         (start : 'Coords)
+         (max_dist : float32) =
     // Distance from start along optimal path
     let g_score = new Dictionary<'Coords, float32>()
 
@@ -58,13 +59,18 @@ let find (h : 'Coords -> float32) // Estimate of distance to the goal. Must sati
                 goal <- Some x
             else
                 visited.Add(x) |> ignore
+                let g_x = g_score.[x]
 
                 let unvisited_neighbours =
                     neighboursOf x
-                    |> List.filter (fun x' -> not <| visited.Contains(x'))
+                    |> List.map (fun x' -> (x', g_x + dist(x, x')))
+                    |> List.filter (fun (x', dist) ->
+                        not <| visited.Contains(x')
+                        && dist <= max_dist
+                        )
                 
-                for x' in unvisited_neighbours do
-                    let g = g_score.[x] + dist(x, x')
+                for x', dist in unvisited_neighbours do
+                    let g = g_x + dist
                 
                     let update() =
                         came_from.[x'] <- x
