@@ -274,6 +274,7 @@ let drawPath() =
                 (neighboursOfWrapSq !terr_size >> List.filter (Terrain.inRangeSq !terr) >> List.filter (Terrain.getSq !terr >> (=)(Terrain.getSq !terr start)))
                 (fun _ -> 1.0f)
                 start
+                System.Single.PositiveInfinity
         match path with
         | Some coords ->
             try
