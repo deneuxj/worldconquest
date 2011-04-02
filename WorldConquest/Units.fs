@@ -3,20 +3,24 @@
 module Units
 
 open HexTiling
-
+ 
 type Health = Health of float32
 
 type Fuel = Fuel of int
 
 type BomberTransport =
     | Bombs of int
-    | Infantries of int
+    | Infantry of Health
 
 type CarriedAircraft =
     | Fighter of Health
     | Bomber of BomberTransport * Health
 
-type LiftedInfantry = { health : float32 }
+type TransportedUnit =
+    | Infantry of Health
+    | Tank of Health
+    | Artillery of Health
+    | AntiAircraft of Health
 
 type Docked = Docked | NotDocked
 
@@ -29,7 +33,7 @@ type UnitTypes =
     | Tank
     | Artillery
     | AntiAircraft
-    | Transport of Docked * LiftedInfantry list
+    | Transport of Docked * TransportedUnit list
     | Destroyer of Docked
     | Submarine of Docked * Stealthy
     | Battleship of Docked
@@ -37,16 +41,42 @@ type UnitTypes =
     | Fighter of Landed * Fuel
     | Bomber of Landed * Fuel * BomberTransport
 
-let (|LandUnit|SeaUnit|AirUnit|DockedOrLanded|) u =
+let getBombardRange = function
+    | Infantry
+    | Tank
+    | Transport _
+    | Destroyer _
+    | Submarine _
+    | Carrier _
+    | Fighter _
+    | Bomber _ -> 0
+    | Artillery -> 4
+    | AntiAircraft -> 4
+    | Battleship _ -> 4
+
+let getMovementRange = function
+    | Infantry -> 1
+    | Tank -> 2
+    | Transport _ -> 2
+    | Destroyer _ -> 4
+    | Submarine _ -> 3
+    | Carrier _ -> 3
+    | Fighter _ -> 9
+    | Bomber _ -> 6
+    | Artillery -> 1
+    | AntiAircraft -> 1
+    | Battleship _ -> 3
+
+let (|LandUnit|SeaUnit|AirUnit|Docked|Landed|) u =
     match u with
     | Infantry | Tank | Artillery | AntiAircraft -> LandUnit
     | Transport(Docked, _)
     | Destroyer(Docked)
     | Submarine(Docked, _)
     | Battleship(Docked)
-    | Carrier(Docked, _)
+    | Carrier(Docked, _) -> Docked
     | Fighter(Landed, _)
-    | Bomber(Landed, _, _) -> DockedOrLanded
+    | Bomber(Landed, _, _) -> Landed
     | Transport _ | Destroyer _ | Submarine _ | Battleship _ | Carrier _ -> SeaUnit
     | Fighter _ | Bomber _ -> AirUnit
 
@@ -76,13 +106,13 @@ let canDirectAttack (attacker : UnitInfo, defender : UnitInfo) =
     match attacker.specific with
     | LandUnit ->
         match defender.specific with
-        | DockedOrLanded | LandUnit -> true
+        | Docked | Landed | LandUnit -> true
         | AirUnit | SeaUnit -> false
-    | Transport _ | DockedOrLanded -> false
+    | Transport _ | Docked | Landed -> false
     | SeaUnit ->
         match defender.specific with
         | SeaUnit -> true
-        | LandUnit | AirUnit | DockedOrLanded -> false
+        | LandUnit | AirUnit | Docked | Landed -> false
     | AirUnit -> true
 
 let canBombard (attacker : UnitInfo, target : UnitInfo) =
@@ -93,21 +123,25 @@ let canBombard (attacker : UnitInfo, target : UnitInfo) =
         | AirUnit -> false
         | LandUnit
         | SeaUnit
-        | DockedOrLanded -> true
+        | Docked
+        | Landed -> true
     | AntiAircraft _ ->
         match target.specific with
         | AirUnit -> true
         | LandUnit
         | SeaUnit
-        | DockedOrLanded -> false
+        | Docked
+        | Landed -> false
     | Battleship _ ->
         match target.specific with
         | Submarine _
         | AirUnit -> false
         | LandUnit
         | SeaUnit
-        | DockedOrLanded -> true
+        | Docked
+        | Landed -> true
     | LandUnit
     | SeaUnit
     | AirUnit
-    | DockedOrLanded -> false
+    | Docked
+    | Landed -> false
