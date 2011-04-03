@@ -10,6 +10,7 @@
 #load "PathFinding.fs"
 #load "GeneticOptimization.fs"
 #load "HexTiling.fs"
+#load "Units.fs"
 #load "Terrain.fs"
 #load "Resource.fs"
 #load "Regions.fs"
@@ -78,6 +79,9 @@ let newTerrain() =
 let terr = newTerrain() |> ref
 let regions = Regions.markRegions !terr |> ref
 let resources = MapCreation.mkResources !terr |> ref
+let resourceOwners = !resources |> Array.map (fun _  -> None : int option) |> ref
+let players : Units.UnitInfo[][] ref =
+    ref [| Array.empty; Array.empty |]
 
 let orig = Vector2.Zero |> ref
 let zoom = ref 1.0f
@@ -116,9 +120,57 @@ let (|CursorMoveKey|_|) (k : Keys) =
     | Keys.C -> Some 5
     | _ -> None
 
+let player = ref 0
+
 form.XnaControl.KeyDown.Add(fun kev ->
+    let appendUnit u =
+        let u : Units.UnitInfo =
+            { coords = !cursor |> toHex;
+              health = 1.0f;
+              moves = Units.getMovementRange u;
+              specific = u }
+        players.Value.[!player] <- Array.append players.Value.[!player] [| u |]
+
+    //printfn "%A" kev.KeyCode
+
     kev.Handled <-
         match kev.KeyCode with
+        | Keys.Oem5 ->
+            player := 1 - !player
+            true
+        | Keys.D1 ->
+            appendUnit Units.UnitTypes.Infantry
+            true 
+        | Keys.D2 ->
+            appendUnit Units.UnitTypes.Tank
+            true 
+        | Keys.D3 ->
+            appendUnit Units.UnitTypes.Artillery
+            true 
+        | Keys.D4 ->
+            appendUnit Units.UnitTypes.AntiAircraft
+            true 
+        | Keys.D5 ->
+            appendUnit (Units.UnitTypes.Transport(Units.NotDocked, []))
+            true 
+        | Keys.D6 ->
+            appendUnit (Units.UnitTypes.Destroyer(Units.NotDocked))
+            true
+        | Keys.D7 ->
+            appendUnit (Units.UnitTypes.Battleship(Units.NotDocked))
+            true
+        | Keys.D8 ->
+            appendUnit (Units.UnitTypes.Submarine(Units.NotDocked, Units.NotStealthy))
+            true
+        | Keys.D9 ->
+            appendUnit (Units.UnitTypes.Carrier(Units.NotDocked, []))
+            true
+        | Keys.D0 ->
+            appendUnit (Units.UnitTypes.Fighter(Units.Airborne, Units.Fuel 20))
+            true
+        | Keys.Oemplus ->
+            appendUnit (Units.UnitTypes.Bomber(Units.Airborne, Units.Fuel 20, Units.BomberTransport.Bombs 2))
+            true
         | Keys.Space ->
             orig := Vector2.Zero
             true
@@ -132,6 +184,8 @@ form.XnaControl.KeyDown.Add(fun kev ->
             terr := newTerrain()
             regions := Regions.markRegions !terr
             resources := MapCreation.mkResources !terr
+            resourceOwners := !resources |> Array.map (fun _ -> None)
+            players := [| Array.empty; Array.empty |]
             true
         | Keys.D ->
             path_start :=
@@ -162,6 +216,21 @@ let airfield_src_rect = new Rectangle(X=348, Y=108, Width=20, Height=8) |> sn
 let harbour_src_rect = new Rectangle(X=128, Y=311, Width=40, Height=48) |> sn
 let cursor_src_rect = new Rectangle(X=170, Y=458, Width=40, Height=48) |> sn
 let highlight_src_rect = new Rectangle(X=128, Y=381, Width=40, Height=48) |> sn
+let white_hex_src_rect = new Rectangle(X=2, Y=457, Width=40, Height=48) |> sn
+
+
+let getUnitRect x y = new Rectangle(X=x, Y=y, Width=30, Height=30) |> sn
+let tank_src_rect = getUnitRect 0 0
+let artillery_src_rect = getUnitRect 30 0
+let infantry_src_rect = getUnitRect 60 30
+let anti_aircraft_src_rect = getUnitRect 0 30
+let transport_src_rect = getUnitRect 180 30
+let destroyer_src_rect = getUnitRect 330 30
+let submarine_src_rect = getUnitRect 150 30
+let battleship_src_rect = getUnitRect 60 0
+let carrier_src_rect = getUnitRect 180 0
+let fighter_src_rect = getUnitRect 360 0
+let bomber_src_rect = getUnitRect 90 0
 
 let batch = new Graphics.SpriteBatch(form.XnaControl.GraphicsDevice)
 
@@ -180,10 +249,16 @@ let getDestPos(x, y) =
 let getDestRect(dst_pos : Vector2) =
     new Rectangle(X = (dst_pos.X |> int), Y = (dst_pos.Y |> int), Width = (40.0f * !zoom |> int), Height = (48.0f * !zoom |> int))
 
-let drawTile src_rect (x, y) =
+let drawFromTexture texture color src_rect (x, y) =
     let dst_pos = getDestPos(x, y)
     let dst_rect = getDestRect(dst_pos)
-    batch.Draw(tiles, dst_rect, src_rect, Color.White)
+    batch.Draw(texture, dst_rect, src_rect, color)
+
+let drawTile = drawFromTexture tiles Color.White
+
+let drawColoredTile = drawFromTexture tiles
+
+let drawUnit = drawFromTexture units Color.White
 
 type Graphics.SpriteBatch with
     member x.DrawString(font : Graphics.SpriteFont, txt : string, pos : Vector2, color : Color, scale : float32) =
@@ -286,15 +361,61 @@ let drawPath() =
         | None ->
             ()
 
+let drawUnits bg_color (units : Units.UnitInfo[]) =
+    try
+        let blend =
+            new Graphics.BlendState(
+                AlphaSourceBlend = Graphics.Blend.SourceAlpha,
+                ColorSourceBlend = Graphics.Blend.SourceAlpha,
+                AlphaDestinationBlend = Graphics.Blend.InverseSourceAlpha,
+                ColorDestinationBlend = Graphics.Blend.InverseSourceAlpha)
+
+        batch.Begin(Graphics.SpriteSortMode.Immediate, blend)
+        let units_by_location =
+            units
+            |> Seq.groupBy (fun u -> u.coords)
+
+        for (coords, us) in units_by_location do
+            let (SquareCoords(x, y)) = coords |> fromHex            
+            drawColoredTile bg_color white_hex_src_rect (x, y)
+
+            for u in us do
+                match u.specific with
+                | Units.UnitTypes.Infantry -> infantry_src_rect
+                | Units.UnitTypes.AntiAircraft -> anti_aircraft_src_rect
+                | Units.UnitTypes.Artillery -> artillery_src_rect
+                | Units.UnitTypes.Battleship _ -> battleship_src_rect
+                | Units.UnitTypes.Bomber _ -> bomber_src_rect
+                | Units.UnitTypes.Carrier _ -> carrier_src_rect
+                | Units.UnitTypes.Destroyer _ -> destroyer_src_rect
+                | Units.UnitTypes.Fighter _ -> fighter_src_rect
+                | Units.UnitTypes.Submarine _ -> submarine_src_rect
+                | Units.UnitTypes.Tank -> tank_src_rect
+                | Units.UnitTypes.Transport _ -> transport_src_rect
+                |> fun r -> drawUnit r (x, y)
+    finally
+        batch.End()
+
+
+let drawFriendlyUnits() =
+    let light_green = new Color(0.0f, 1.0f, 0.0f, 0.5f)
+    drawUnits light_green players.Value.[!player]
+
+let drawEnemyUnits() =
+    let light_red = new Color(1.0f, 0.0f, 0.0f, 0.5f)
+    drawUnits light_red players.Value.[1 - !player]
+
 form.XnaControl.Drawer <-
     fun _ ->
         drawTerrain()
-        drawRegions()
+        //drawRegions()
         drawOil()
         drawWood()
         drawIron()
         drawFactory()
         drawAirfield()
         drawHarbour()
-        drawCursor()
         drawPath()
+        drawFriendlyUnits()
+        drawEnemyUnits()
+        drawCursor()
