@@ -15,6 +15,7 @@
 #load "Resource.fs"
 #load "Regions.fs"
 #load "MapCreation.fs"
+#load "GameState.fs"
 
 open System.Windows.Forms
 open Microsoft.Xna.Framework
@@ -110,6 +111,11 @@ form.XnaControl.MouseUp.Add(fun _ ->
     form.XnaControl.MouseMove.RemoveHandler(mouseDragHandler)
 )
 
+let actionsForm = new Form(Text = "Actions")
+let actionsTxt = new TextBox(Multiline = true, Dock = DockStyle.Fill)
+actionsForm.Controls.Add(actionsTxt)
+actionsForm.Show()
+
 let (|CursorMoveKey|_|) (k : Keys) =
     match k with
     | Keys.E -> Some 0
@@ -121,6 +127,7 @@ let (|CursorMoveKey|_|) (k : Keys) =
     | _ -> None
 
 let player = ref 0
+let current_unit : int option ref = ref None
 
 form.XnaControl.KeyDown.Add(fun kev ->
     let appendUnit u =
@@ -135,8 +142,17 @@ form.XnaControl.KeyDown.Add(fun kev ->
 
     kev.Handled <-
         match kev.KeyCode with
+        | Keys.Q ->
+            current_unit :=
+                match !current_unit, players.Value.[!player].Length with
+                | _, 0 -> None
+                | None, _ -> Some 0
+                | Some idx, n -> if idx + 1 >= n then Some 0 else Some (idx + 1)
+            printfn "%A" current_unit
+            true 
         | Keys.Oem5 ->
             player := 1 - !player
+            current_unit := None
             true
         | Keys.D1 ->
             appendUnit Units.UnitTypes.Infantry
@@ -195,6 +211,19 @@ form.XnaControl.KeyDown.Add(fun kev ->
             true
         | CursorMoveKey idx ->
             cursor := neighboursOfSq !cursor |> fun x -> List.nth x idx |> wrapX !terr_size
+            actionsTxt.Text <-
+                match !current_unit with
+                | Some idx ->
+                    let u = players.Value.[!player].[idx]
+                    GameState.getOrder
+                        { terrain = !terr;
+                          getResourceAt = fun coords -> None;
+                          player_units = !players }
+                        !player
+                        u
+                        (toHex !cursor)
+                    |> sprintf "%A"
+                | None -> "No unit selected"
             true
         | _ -> false
 
@@ -217,7 +246,7 @@ let harbour_src_rect = new Rectangle(X=128, Y=311, Width=40, Height=48) |> sn
 let cursor_src_rect = new Rectangle(X=170, Y=458, Width=40, Height=48) |> sn
 let highlight_src_rect = new Rectangle(X=128, Y=381, Width=40, Height=48) |> sn
 let white_hex_src_rect = new Rectangle(X=2, Y=457, Width=40, Height=48) |> sn
-
+let white_outline_src_rect = new Rectangle(X=380, Y=458, Width=40, Height=48) |> sn
 
 let getUnitRect x y = new Rectangle(X=x, Y=y, Width=30, Height=30) |> sn
 let tank_src_rect = getUnitRect 0 0
@@ -405,6 +434,18 @@ let drawEnemyUnits() =
     let light_red = new Color(1.0f, 0.0f, 0.0f, 0.5f)
     drawUnits light_red players.Value.[1 - !player]
 
+let drawCurrentUnitOutline() =
+    match !current_unit with
+    | None -> ()
+    | Some i ->
+        try
+            batch.Begin()
+            let u = players.Value.[!player].[i]
+            let (SquareCoords(x,y)) = u.coords |> fromHex
+            drawColoredTile Color.Blue white_outline_src_rect (x, y)
+        finally
+            batch.End()
+
 form.XnaControl.Drawer <-
     fun _ ->
         drawTerrain()
@@ -418,4 +459,5 @@ form.XnaControl.Drawer <-
         drawPath()
         drawFriendlyUnits()
         drawEnemyUnits()
+        drawCurrentUnitOutline()
         drawCursor()
