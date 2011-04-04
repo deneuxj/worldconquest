@@ -48,7 +48,7 @@ let getOrder (gs : GameState) (player : int) =
                 PathFinding.find
                     dist
                     (fun c -> neighboursOfWrapSq width (fromHex c)
-                              |> List.filter (fun c -> (getSq gs.terrain c) = dest_terrain)
+                              |> List.filter (fun (SquareCoords(_, y) as c) -> y >= 0 && y < width && (getSq gs.terrain c) = dest_terrain)
                               |> List.map toHex
                               |> List.filter (fun c -> not <| enemy_positions.Contains(c))
                               )
