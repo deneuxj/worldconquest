@@ -70,7 +70,7 @@ let find (h : 'Coords -> float32) // Estimate of distance to the goal. Must sati
                         )
                 
                 for x', dist in unvisited_neighbours do
-                    let g = g_x + dist
+                    let g = dist
                 
                     let update() =
                         came_from.[x'] <- x
@@ -88,7 +88,7 @@ let find (h : 'Coords -> float32) // Estimate of distance to the goal. Must sati
             match came_from.GetValue(x) with
             | Some x' -> reconstruct x' (x::path)
             | None -> path
-        reconstruct goal [goal]
+        reconstruct goal []
         |> Some
     | None ->
         None
