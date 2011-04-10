@@ -9,7 +9,7 @@ type PlayerId = PlayerId of int
 
 type GameState =
     {  terrain : Terrain[,]
-       getResourceAt : HexCoords -> (Resource * PlayerId) option
+       getResourceAt : HexCoords -> (Resource * PlayerId option) option
        player_units : UnitInfo[][]  }
 
 type Order =
@@ -41,14 +41,20 @@ let getOrder (gs : GameState) (player : int) =
         let dest_terrain = getHex gs.terrain destination
 
         let canMove dist max_moves =
-            match unit.specific, dest_terrain with
+            match unit.specific with
             // Land unit and sea unit can move through a certain terrain type
             // Units cannot move to a tile occupied by an enemy unit.
-            | LandUnit, Land | SeaUnit, Sea | Docked, Sea ->
+            | LandUnit | SeaUnit | Docked ->
+                let terr_type =
+                    match unit.specific with
+                    | LandUnit -> Land
+                    | SeaUnit | Docked -> Sea
+                    | _ -> failwith "Unreachable"
+
                 PathFinding.find
                     dist
                     (fun c -> neighboursOfWrapSq width (fromHex c)
-                              |> List.filter (fun (SquareCoords(_, y) as c) -> y >= 0 && y < width && (getSq gs.terrain c) = dest_terrain)
+                              |> List.filter (fun (SquareCoords(_, y) as c) -> y >= 0 && y < width && (getSq gs.terrain c) = terr_type)
                               |> List.map toHex
                               |> List.filter (fun c -> not <| enemy_positions.Contains(c))
                               )
@@ -56,12 +62,9 @@ let getOrder (gs : GameState) (player : int) =
                     (unit.coords)
                     (float32 max_moves)
             
-            // Land units cannot move over sea tiles, sea units cannot move over land tiles.
-            | LandUnit, Sea | SeaUnit, Land | Docked, Land -> None
-
             // Aircrafts can fly anywhere, but not through tiles occupied by enemies.
-            | Fighter(_, Fuel fuel), _
-            | Bomber(_, Fuel fuel, _), _ ->
+            | Fighter(_, Fuel fuel)
+            | Bomber(_, Fuel fuel, _) ->
                 let moves =
                     min max_moves fuel
                 PathFinding.find
@@ -74,8 +77,8 @@ let getOrder (gs : GameState) (player : int) =
                     (float32 moves)
 
             // Should not be reachable.
-            | Landed, _
-            | AirUnit, _ -> None
+            | Landed
+            | AirUnit -> None
 
         let canMoveToNeighbour destination =
             let ngbh = neighboursOfWrapSq width (fromHex destination)
@@ -99,13 +102,13 @@ let getOrder (gs : GameState) (player : int) =
             if
                 enemy_positions.Contains(destination)
                 && seq {
-                    for i in 0..gs.player_units.Length-1 do
-                        if i <> player then
-                            yield! gs.player_units.[i] |> Array.filter (fun u -> u.coords = destination)
+                        for i in 0..gs.player_units.Length-1 do
+                            if i <> player then
+                                yield! gs.player_units.[i] |> Array.filter (fun u -> u.coords = destination)
                     }
                    |> Seq.exists (fun target -> canDirectAttack(unit, target))
             then
-                canMove (dist destination) unit.moves
+                canMoveToNeighbour destination
             else
                 None
 
@@ -156,7 +159,7 @@ let getOrder (gs : GameState) (player : int) =
                 |> List.ofSeq
 
             match candidate_receivers with
-            | [] -> None
+            | [] -> printfn "No candidate receiver"; None
             | idx :: _ ->
                 match canMoveToNeighbour destination with
                 | Some path -> Some (path, idx)
@@ -169,7 +172,8 @@ let getOrder (gs : GameState) (player : int) =
                 | _ -> false
                 &&
                 match gs.getResourceAt destination with
-                | Some(_, PlayerId i) -> i <> player
+                | Some(_, Some (PlayerId i)) -> i <> player
+                | Some(_, None) -> true
                 | None -> false
             then
                 canMove (dist destination) unit.moves
@@ -183,8 +187,8 @@ let getOrder (gs : GameState) (player : int) =
                 | _ -> false
                 &&
                 match gs.getResourceAt destination with
-                | Some(Resource.Harbour, PlayerId i)
-                | Some(Resource.Factory, PlayerId i) -> i = player
+                | Some(Resource.Harbour, Some (PlayerId i))
+                | Some(Resource.Factory, Some (PlayerId i)) -> i = player
                 | Some _
                 | None -> false
             then
@@ -200,7 +204,7 @@ let getOrder (gs : GameState) (player : int) =
                 | _ -> false
                 &&
                 match gs.getResourceAt destination with
-                | Some(Resource.Airfield, PlayerId i) -> i = player
+                | Some(Resource.Airfield, Some(PlayerId i)) -> i = player
                 | Some _
                 | None -> false
             then
