@@ -80,9 +80,19 @@ let newTerrain() =
 let terr = newTerrain() |> ref
 let regions = Regions.markRegions !terr |> ref
 let resources = MapCreation.mkResources !terr |> ref
-let resourceOwners = !resources |> Array.map (fun _  -> None : int option) |> ref
+let resourceOwners = !resources |> Array.map (fun _  -> None : GameState.PlayerId option) |> ref
 let players : Units.UnitInfo[][] ref =
     ref [| Array.empty; Array.empty |]
+
+let getRscAt c0 =
+    let rsc_at =
+        Array.zip !resources !resourceOwners
+        |> Seq.filter (fun ((c, r), owner) -> c = c0)
+    if not <| Seq.isEmpty rsc_at then
+        let (_, rsc), owner = Seq.head rsc_at
+        Some(rsc, owner)
+    else
+        None
 
 let orig = Vector2.Zero |> ref
 let zoom = ref 1.0f
@@ -217,7 +227,7 @@ form.XnaControl.KeyDown.Add(fun kev ->
                     let u = players.Value.[!player].[idx]
                     GameState.getOrder
                         { terrain = !terr;
-                          getResourceAt = fun coords -> None;
+                          getResourceAt = fromHex >> getRscAt;
                           player_units = !players }
                         !player
                         u
