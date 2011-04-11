@@ -1,14 +1,16 @@
 ﻿module HexTiling
 
+open System.Collections.Generic
+
 type HexCoords = HexCoords of int*int
 type SquareCoords = SquareCoords of int*int
 
 let fromHex (HexCoords(x, y)) : SquareCoords =
-    let y' = y / 2
+    let y' = y >>> 1
     SquareCoords(x + y', y)
 
 let toHex (SquareCoords(x, y)) : HexCoords =
-    let x' = x - y / 2
+    let x' = x - (y >>> 1)
     HexCoords(x', y)
 
 let distDx getDx (HexCoords(x0, y0) as c0) (HexCoords(x1, y1) as c1) : int =
@@ -85,3 +87,21 @@ let neighboursOf (HexCoords(i, j)) =
             (i0, j2); (i1, j2)
     ]
     |> List.map HexCoords
+
+let cachedWithin = new Dictionary<int, HexCoords[]>()
+
+let getAllWithin n =
+    match cachedWithin.TryGetValue(n) with
+    | true, v -> v
+    | false, _ ->
+        let v =
+            [|
+                let c0 = HexCoords(0, 0)
+                for i in -n..n do
+                    for j in -n..n do
+                        let c = toHex(SquareCoords(i, j))
+                        if dist c c0 <= n then
+                            yield c
+            |]
+        cachedWithin.Add(n, v)
+        v
