@@ -10,6 +10,7 @@ type PlayerId = PlayerId of int
 type GameState =
     {  terrain : Terrain[,]
        getResourceAt : HexCoords -> (Resource * PlayerId option) option
+       getResourcesOf : PlayerId -> HexCoords list
        player_units : UnitInfo[][]  }
 
 type Order =
