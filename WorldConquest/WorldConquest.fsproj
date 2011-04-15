@@ -57,6 +57,7 @@
     <Compile Include="Resource.fs" />
     <Compile Include="MapCreation.fs" />
     <Compile Include="GameState.fs" />
+    <Compile Include="Ai.fs" />
     <None Include="Script.fsx" />
     <None Include="XnaWinForm.fsx" />
   </ItemGroup>

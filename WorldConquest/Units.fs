@@ -15,12 +15,20 @@ type BomberTransport =
 type CarriedAircraft =
     | Fighter of Health
     | Bomber of BomberTransport * Health
+with
+    member x.Health =
+        match x with
+        | Fighter (Health h) | Bomber (_, Health h) -> h
 
 type TransportedUnit =
     | Infantry of Health
     | Tank of Health
     | Artillery of Health
     | AntiAircraft of Health
+with
+    member x.Health =
+        match x with
+        | Infantry (Health h) | Tank (Health h) | Artillery (Health h) | AntiAircraft (Health h) -> h
 
 type Docked = Docked | NotDocked
 
@@ -66,6 +74,9 @@ let getMovementRange = function
     | Artillery -> 1
     | AntiAircraft -> 1
     | Battleship _ -> 3
+
+let fighter_fuel_range = 18
+let bomber_fuel_range = 24
 
 let (|LandUnit|SeaUnit|AirUnit|Docked|Landed|) u =
     match u with
