@@ -57,7 +57,7 @@ let getBombardRange = function
     | Submarine _
     | Carrier _
     | Fighter _
-    | Bomber _ -> 0
+    | Bomber _ -> -1
     | Artillery -> 4
     | AntiAircraft -> 4
     | Battleship _ -> 4
@@ -156,3 +156,15 @@ let canBombard (attacker : UnitInfo, target : UnitInfo) =
     | AirUnit
     | Docked
     | Landed -> false
+
+let canBomb (attacker : UnitInfo, target : UnitInfo) =
+    match attacker.specific with
+    | Bomber(Airborne, _, Bombs n) when n > 0 ->
+        match target.specific with
+        | Submarine _
+        | AirUnit -> false
+        | LandUnit
+        | SeaUnit
+        | Docked
+        | Landed -> true
+    | _ -> false
