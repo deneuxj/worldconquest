@@ -9,13 +9,14 @@ let getValidOrders (state : GameState) (player : int) =
     let width = state.terrain.GetLength(0)
     let getUnitOrders = getOrder state player
     [|
-        let getUnitOrders u = [|
+        let getUnitOrders u =
             let destinations =
                 getAllWithin (getMovementRange u.specific)
                 |> Array.filter (fun (HexCoords(_, y)) -> y >= 0 && y < width)
                 |> Array.map (fromHex >> wrapX width >> toHex)
-            yield! destinations |> Array.map (getUnitOrders u)
-        |]
+            destinations
+            |> Array.map (getUnitOrders u)
+            |> List.concat
 
         for u in state.player_units.[player] do
             yield! getUnitOrders u
@@ -34,7 +35,7 @@ let getValidOrders (state : GameState) (player : int) =
                            health = t.Health;
                            moves = getMovementRange unit_type;
                            specific = unit_type  }
-                    yield! getUnitOrders u'
+                    yield! getUnitOrders u' |> List.filter (function Move _ -> true | _ -> false)
             | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
                 let u' =
                     {  coords = u.coords;
@@ -117,10 +118,19 @@ let evalHealth (gs : GameState) (player : int) =
 
 // Resources
 let evalResources (gs : GameState) (player : int) =
-    gs.getResourcesOf (PlayerId player)
-    |> Seq.groupBy (fun coords -> match gs.getResourceAt coords with Some (rsc, _) -> Some rsc | None -> None)
-    |> Seq.choose (fun (rsc, items) -> match rsc with None -> None | Some _ -> Seq.length items |> Some)
-    |> Seq.min
+    let counts = 
+        gs.getResourcesOf (PlayerId player)
+        |> Seq.groupBy (fun (_, rsc) -> rsc)
+        |> Seq.map (fun (_, items) -> Seq.length items)
+        |> Array.ofSeq
+
+    let min = Array.min counts
+    let max =
+        counts
+        |> Array.maxBy(fun n -> if n > min + 1 then -1 else n)
+
+    max
+    |> float32
 
 // Being in range of enemy units
 
