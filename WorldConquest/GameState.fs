@@ -10,12 +10,13 @@ type PlayerId = PlayerId of int
 type GameState =
     {  terrain : Terrain[,]
        getResourceAt : HexCoords -> (Resource * PlayerId option) option
-       getResourcesOf : PlayerId -> HexCoords list
+       getResourcesOf : PlayerId -> (HexCoords * Resource) list
        player_units : UnitInfo[][]  }
 
 type Order =
     | Move of HexCoords list
     | Bombard of HexCoords
+    | Bomb of HexCoords list
     | Unload of HexCoords list * HexCoords
     | Load of HexCoords list * int // Id of the unit
     | DirectAttack of HexCoords list
@@ -98,6 +99,21 @@ let getOrder (gs : GameState) (player : int) =
                         yield! gs.player_units.[i] |> Array.filter (fun u -> u.coords = destination)
                 }
                |> Seq.exists (fun target -> canBombard(unit, target))
+
+        let canBomb() =
+            if
+                enemy_positions.Contains(destination)
+                && seq {
+                        for i in 0..gs.player_units.Length-1 do
+                            if i <> player then
+                                yield! gs.player_units.[i] |> Array.filter (fun u -> u.coords = destination)
+                    }
+                   |> Seq.exists (fun target -> canBom(unit, target))
+            then
+                canMove dist (unit.moves)
+            else
+                None
+
 
         let canDirectAttack() =
             if
@@ -221,6 +237,10 @@ let getOrder (gs : GameState) (player : int) =
             if canBombard() then
                 yield Bombard destination
 
+            match canBomb() with
+            | Some path -> yield Bomb path
+            | None -> ()
+
             match canDirectAttack() with
             | Some path -> yield DirectAttack path
             | None -> ()
@@ -247,15 +267,17 @@ let getOrder (gs : GameState) (player : int) =
         ]
 
 
-let moveUnits (units : UnitInfo[]) (destinations : HexCoords option[]) =
-    let moveUnit (u : UnitInfo) (dest : HexCoords option) =
-        match dest with
-        | Some dest ->
-            { u with coords = dest }
-        | None -> u
-    Array.map2 moveUnit units destinations
+let executeOrders (gs : GameState) (player : int) (orders : Order[]) =
+    let width = gs.terrain.GetLength(0)
+    let executeOrder (u : UnitInfo, order : Order) =
+        let getDestination = function
+        | [] -> u.coords
+        | path -> path |> List.rev |> List.head
 
-let validateMoves terrain (getResourceAt : HexCoords -> Resource option) (units : UnitInfo[]) (destinations : HexCoords option[]) =
-    let isValid (u : UnitInfo) (dest : HexCoords option) =
-        false
-    Array.map2 isValid units destinations
+        match order with
+        | Move [] | DirectAttack [] | Conquer [] -> u
+        | Move path | DirectAttack path | Conquer path ->
+            { u with coords = getDestination path }
+
+    ()
+    
