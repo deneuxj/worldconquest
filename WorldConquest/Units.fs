@@ -41,11 +41,11 @@ type UnitTypes =
     | Tank
     | Artillery
     | AntiAircraft
-    | Transport of Docked * TransportedUnit list
+    | Transport of Docked * TransportedUnit[]
     | Destroyer of Docked
     | Submarine of Docked * Stealthy
     | Battleship of Docked
-    | Carrier of Docked * CarriedAircraft list
+    | Carrier of Docked * CarriedAircraft[]
     | Fighter of Landed * Fuel
     | Bomber of Landed * Fuel * BomberTransport
 
@@ -75,6 +75,45 @@ let getMovementRange = function
     | AntiAircraft -> 1
     | Battleship _ -> 3
 
+let getHealth = function
+    | Infantry -> 1.0f
+    | Tank -> 2.0f
+    | Transport _ -> 1.0f
+    | Destroyer _ -> 5.0f
+    | Submarine _ -> 2.0f
+    | Carrier _ -> 3.0f
+    | Fighter _ -> 2.0f
+    | Bomber _ -> 1.0f
+    | Artillery -> 1.0f
+    | AntiAircraft -> 1.0f
+    | Battleship _ -> 7.0f
+
+// Production costs
+let infantry_cost = 2
+let tank_cost = 5
+let transport_cost = 10
+let destroyer_cost = 15
+let submarine_cost = 15
+let carrier_cost = 50
+let fighter_cost = 5
+let bomber_cost = 7
+let artillery_cost = 5
+let anti_aircraft_cost = 5
+let battleship_cost = 30
+
+// Health points. Basic damage per hit is 3.0f
+let infantry_hp = 3.0f
+let tank_hp = 6.0f
+let transport_hp = 3.0f
+let destroyer_hp = 10.0f
+let submarine_hp = 6.0f
+let carrier_hp = 15.0f
+let fighter_hp = 6.0f
+let bomber_hp = 3.0f
+let artillery_hp = 3.0f
+let anti_aircraft_hp = 3.0f
+let battleship_hp = 20.0f
+
 let fighter_fuel_range = 18
 let bomber_fuel_range = 24
 
@@ -91,6 +130,10 @@ let (|LandUnit|SeaUnit|AirUnit|Docked|Landed|) u =
     | Transport _ | Destroyer _ | Submarine _ | Battleship _ | Carrier _ -> SeaUnit
     | Fighter _ | Bomber _ -> AirUnit
 
+let (|BomberWithBombs|_|) u =
+    match u with
+    | Bomber(_, _, Bombs n) when n > 0 -> Some n
+    | _ -> None
 
 type UnitInfo =
     {  coords : HexCoords

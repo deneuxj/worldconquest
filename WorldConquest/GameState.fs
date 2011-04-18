@@ -13,6 +13,11 @@ type GameState =
        getResourcesOf : PlayerId -> (HexCoords * Resource) list
        player_units : UnitInfo[][]  }
 
+type UnitIndex =
+    | Root of int
+    | Transported of int * int // A unit inside another unit
+    | Transported2 of int * int * int // A unit inside a unit which is itself inside another unit.
+
 type Order =
     | Move of HexCoords list
     | Bombard of HexCoords
@@ -133,7 +138,8 @@ let getOrder (gs : GameState) (player : int) =
             if
                 // The unit is a non-empty transport or bomber
                 match unit.specific with
-                | Transport(_, _ :: _) | Bomber(_, _, BomberTransport.Infantry _) -> true
+                | Transport(_, [||]) -> false
+                | Transport(_, _) | Bomber(_, _, BomberTransport.Infantry _) -> true
                 | _ -> false
                 &&
                 // The unload location is on land
@@ -269,14 +275,16 @@ let getOrder (gs : GameState) (player : int) =
 // f maps a unit to a sequence of some generic data
 // g filters the generic data for units that are inside a transport.
 // g is needed to e.g. prevent artilleries to fire from transports.
-let playerUnitMap (f : UnitInfo -> 'T[]) g (units : UnitInfo seq) =
+let playerUnitMap (f : UnitIndex * UnitInfo -> 'T[]) g (units : UnitInfo[]) =
     [|
-        for u in units do
-            yield f u
+        for i in 0..units.Length-1 do
+            let u = units.[i]
+            yield f (Root i, u)
 
             match u.specific with
             | Transport(_, transported) ->
-                for t in transported do
+                for i2 in 0..transported.Length-1 do
+                    let t = transported.[i2]
                     let unit_type =
                         match t with
                         | TransportedUnit.Infantry _ -> Infantry
@@ -288,16 +296,17 @@ let playerUnitMap (f : UnitInfo -> 'T[]) g (units : UnitInfo seq) =
                            health = t.Health;
                            moves = getMovementRange unit_type;
                            specific = unit_type  }
-                    yield f u' |> Array.filter g
+                    yield f (Transported(i, i2), u') |> Array.filter g
             | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
                 let u' =
                     {  coords = u.coords;
                        health = h;
                        moves = getMovementRange Infantry
                        specific = Infantry  }
-                yield f u'
+                yield f (Transported(i, 0), u')
             | Carrier(_, aircrafts) ->
-                for plane in aircrafts do
+                for i2 in 0..aircrafts.Length-1 do
+                    let plane = aircrafts.[i2]
                     let unit_type =
                         match plane with
                         | CarriedAircraft.Fighter _ -> Fighter(Landed, Fuel fighter_fuel_range)
@@ -307,7 +316,17 @@ let playerUnitMap (f : UnitInfo -> 'T[]) g (units : UnitInfo seq) =
                            health = plane.Health;
                            moves = getMovementRange unit_type;
                            specific = unit_type  }
-                    yield f u'
+                    yield f (Transported(i, i2), u')
+
+                    match unit_type with
+                    | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
+                        let u'' =
+                            {  coords = u.coords;
+                               health = h;
+                               moves = getMovementRange Infantry
+                               specific = Infantry  }
+                        yield f (Transported2(i, i2, 0), u'')
+                    | _ -> ()
             | _ -> ()
     |]
 
@@ -315,6 +334,12 @@ type UnitTempState =
     | Embarking of UnitInfo * int
     | Killed of UnitInfo
     | Normal of UnitInfo
+
+let mkFetchOrderMap f orders =
+    let it = (orders :> System.Collections.Generic.IEnumerable<Order>).GetEnumerator()
+    fun u ->
+        let order = it.MoveNext() |> fun _ -> it.Current
+        f (u, order)
 
 let executeOrders (gs : GameState) (player : int) (orders : Order[]) =
     let width = gs.terrain.GetLength(0)
@@ -342,17 +367,171 @@ let executeOrders (gs : GameState) (player : int) (orders : Order[]) =
             match u.specific with
             | Transport(docked, _) ->
                 Normal { u with coords = getDestination path;
-                                specific = Transport(docked, []) }
+                                specific = Transport(docked, [||]) }
             | Bomber(landed, fuel, _) ->
                 Normal { u with coords = getDestination path;
                                 specific = Bomber(landed, fuel, BomberTransport.Bombs 0) }
             | _ -> failwith "Only transports and bombers can unload their transported units"
 
-    let it = (orders :> System.Collections.Generic.IEnumerable<Order>).GetEnumerator()
-    let fetchAndExecuteOrder u =
-        let order = it.MoveNext() |> fun _ -> it.Current
-        [| executeOrder (u, order) |]
-
+    let fetchAndExecuteOrder =
+        mkFetchOrderMap
+            (fun ((_,u), order) -> [| executeOrder (u, order) |])
+            orders
+        
     playerUnitMap fetchAndExecuteOrder (fun _ -> true) gs.player_units.[player]
     |> Array.concat
-    
+
+
+type AttackType =
+    | Remote
+    | Melee
+
+type AttackOrder =
+    {  player : PlayerId
+       unit : int
+       coords : HexCoords
+       attack : AttackType  }
+
+let extractAttackOrders (units : UnitInfo[]) (player : int) (orders : Order[]) = ()
+
+let injureUnits (gs : GameState) (player : int) (orders : AttackOrder[]) =
+
+    let enemyUnits =
+        [|
+            for i in 0..gs.player_units.Length - 1 do
+                let victim = PlayerId i
+                if i <> player then
+                    for i2 in 0..gs.player_units.[i].Length - 1 do
+                        let u = gs.player_units.[i].[i2]
+                        yield victim, i, u.coords
+        |]
+        |> Seq.groupBy (fun (victim, i, coords) -> coords)
+        |> dict
+
+    [
+        for attack in orders do
+            match enemyUnits.TryGetValue(attack.coords) with
+            | true, units ->                
+                let attacker = gs.player_units.[player].[attack.unit]
+                for (PlayerId victim_player) as vp_id, victim_idx, _ in units do
+                    let victim_unit = gs.player_units.[victim_player].[victim_idx]
+                    let bonus =
+                        match attacker.specific, victim_unit.specific, attack.attack with
+                        | Infantry, Infantry, Melee
+                        | Tank, Tank, Melee
+                        | Tank, Destroyer(Docked.Docked), Melee
+                        | Tank, Battleship(Docked.Docked), Melee
+                        | Artillery, Artillery, Melee
+                        | Artillery, AntiAircraft, Melee
+                        | Artillery, Battleship _, Remote
+                        | AntiAircraft, Artillery, Melee
+                        | AntiAircraft, AntiAircraft, Melee
+                        | Destroyer _, Destroyer _, Melee
+                        | Destroyer _, Battleship _, Melee
+                        | Destroyer _, Carrier _, Melee
+                        | Submarine _, Submarine _, Melee
+                        | Battleship _, Battleship _, _
+                        | Carrier _, Carrier _, Melee
+                        | Fighter _, AntiAircraft, Melee
+                        | Fighter _, Destroyer _, Melee
+                        | Fighter _, Submarine _, Melee
+                        | Fighter _, Battleship _, Melee
+                        | Fighter _, Carrier _, Melee
+                        | Fighter _, Fighter(Airborne, _), Melee
+                        | Bomber _, Bomber(Airborne, _, _), Melee -> 0.0f
+
+                        | BomberWithBombs _, Transport _, Remote -> +1.0f
+                        | BomberWithBombs _, AirUnit, Remote -> failwith "Bomber can't bomb airborne units"
+                        | BomberWithBombs _, _, Remote -> 0.0f
+
+                        | Infantry, Tank, Melee
+                        | Infantry, Submarine(Docked.Docked, _), Melee
+                        | Infantry, Carrier(Docked.Docked, _), Melee
+                        | Infantry, Fighter(Landed.Landed, _), Melee
+                        | Infantry, Bomber(Landed.Landed, _, _), Melee
+                        | Tank, Infantry, Melee
+                        | Tank, Submarine(Docked.Docked, _), Melee
+                        | Tank, Carrier(Docked.Docked, _), Melee
+                        | Tank, Fighter(Landed.Landed, _), Melee
+                        | Tank, Bomber(Landed.Landed, _, _), Melee
+                        | Artillery, Transport(Docked.Docked, _), Melee
+                        | Artillery, Carrier(Docked.Docked, _), _
+                        | Artillery, Fighter(Landed.Landed, _), Melee
+                        | Artillery, Bomber(Landed.Landed, _, _), Melee
+                        | Artillery, Tank, Remote
+                        | Artillery, Destroyer _, Remote
+                        | Artillery, Carrier _, Remote
+                        | AntiAircraft, Transport(Docked.Docked, _), Melee
+                        | AntiAircraft, Submarine(Docked.Docked, _), Melee
+                        | AntiAircraft, Carrier(Docked.Docked, _), Melee
+                        | AntiAircraft, Fighter(Landed.Landed, _), Melee
+                        | AntiAircraft, Bomber(Landed.Landed, _, _), Melee
+                        | Destroyer _, Fighter(Airborne, _), Melee
+                        | Destroyer _, Bomber(Airborne, _, _), Melee
+                        | Submarine(_, _), Battleship _, Melee
+                        | Submarine(_, _), Carrier _, Melee
+                        | Battleship _, Submarine _, Melee
+                        | Battleship _, Carrier _, Melee
+                        | Battleship _, Tank, Remote
+                        | Battleship _, Destroyer _, Remote
+                        | Battleship _, Carrier _, Remote
+                        | Carrier _, Transport _, Melee
+                        | Fighter _, LandUnit, Melee
+                        | Fighter _, Bomber(Airborne, _, _), Melee -> 1.0f
+
+                        | Infantry, Artillery, Melee
+                        | Infantry, AntiAircraft, Melee
+                        | Infantry, Transport(Docked.Docked, _), Melee
+                        | Tank, Artillery, Melee
+                        | Tank, AntiAircraft, Melee
+                        | Tank, Transport(Docked.Docked, _), Melee
+                        | Artillery, LandUnit, Remote
+                        | Artillery, Transport _ , Remote
+                        | Artillery, Landed, Remote
+                        | AntiAircraft, AirUnit, Remote
+                        | _, Transport _, _
+                        | Destroyer _, Submarine _, Melee
+                        | Battleship _, Destroyer _, Melee
+                        | Battleship _, _, Remote
+                        | AirUnit, Landed, Melee
+                        | Submarine _, Transport _, Melee -> 2.0f
+
+                        | Artillery, Infantry, Melee
+                        | Artillery, Tank, Melee
+                        | Artillery, Destroyer(Docked.Docked), Melee
+                        | Artillery, Battleship(Docked.Docked), Melee
+                        | AntiAircraft, Infantry, Melee
+                        | AntiAircraft, Tank, Melee
+                        | AntiAircraft, Destroyer(Docked.Docked), Melee
+                        | AntiAircraft, Battleship(Docked.Docked), Melee
+                        | Submarine(_, NotStealthy), Destroyer _, Melee
+                        | Carrier _, Destroyer _, Melee
+                        | Carrier _, Submarine _, Melee
+                        | Bomber _, AntiAircraft, Melee
+                        | Bomber _, Fighter(Airborne, _), Melee
+                        | Infantry, Destroyer(Docked.Docked), Melee
+                        | Infantry, Battleship(Docked.Docked), Melee -> -1.0f
+
+                        | Carrier _, Battleship _, Melee -> -2.0f
+
+                        | _ -> failwith <| sprintf "Invalid attack %A from %A on %A" attack.attack attacker victim_unit
+
+                    let damage = 3.0f + bonus
+                    let health_points =
+                        match victim_unit.specific with
+                        | Infantry -> infantry_hp
+                        | Tank -> tank_hp
+                        | Transport _ -> transport_hp
+                        | Destroyer _ -> destroyer_hp
+                        | Submarine _ -> submarine_hp
+                        | Carrier _ -> carrier_hp
+                        | Fighter _ -> fighter_hp
+                        | Bomber _ -> bomber_hp
+                        | Artillery -> artillery_hp
+                        | AntiAircraft -> anti_aircraft_hp
+                        | Battleship _ -> battleship_hp
+                    yield (vp_id, victim_idx, damage / health_points)
+
+            | false, _ -> ()
+    ]
+

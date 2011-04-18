@@ -6,7 +6,7 @@ Ar +2 +1 +2 +2 +2 +1 X  0  +1 +2   X    +2   X      bombard
 AA -1 -1 0  0  +1 -1 +1 -1 +1 +1   X    +1   X
 AA X  X  X  X  X  X  X  X  X  X    +2   X    +2     bombard
 Tr X  X  X  X  X  X  X  X  X  X    X    X    X
-De X  X  X  X  X  X  +2 0  0  X    +1   X    +1
+De X  X  X  X  +2 0  +2 0  0  X    +1   X    +1
 Su X  X  X  X  +2 +1 0  +1 +1 X    X    X    X      sneak
 Su X  X  X  X  +2 -1 0  +1 +1 X    X    X    X
 Ba X  X  X  X  +2 +2 +1 0  +1 X    X    X    X
