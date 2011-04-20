@@ -392,7 +392,30 @@ type AttackOrder =
        coords : HexCoords
        attack : AttackType  }
 
-let extractAttackOrders (units : UnitInfo[]) (player : int) (orders : Order[]) = ()
+let extractAttackOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
+    let getRootUnitOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+        match idx with
+        | Root idx ->
+            let coords_and_attack =
+                match order with
+                | Order.Bombard coords -> Some (coords, Remote)
+                | Order.DirectAttack path -> Some (path |> List.rev |> List.head, Melee)
+                | Order.Bomb path -> Some (path |> List.rev |> List.head, Remote)
+                | _ -> None
+            match coords_and_attack with
+            | Some (coords, attack) ->
+                [|
+                    {  player = PlayerId player;
+                       unit = idx;
+                       coords = coords;
+                       attack = attack  }
+                |]
+            | None -> Array.empty
+        | _ -> Array.empty
+
+    let fetchRootUnitOrder = mkFetchOrderMap getRootUnitOrder orders
+    playerUnitMap fetchRootUnitOrder (fun _ -> true) units
+    |> Array.concat
 
 let injureUnits (gs : GameState) (player : int) (orders : AttackOrder[]) =
 
