@@ -21,7 +21,7 @@ type UnitIndex =
 type Order =
     | Move of HexCoords list
     | Bombard of HexCoords
-    | Bomb of HexCoords list
+    | Bomb of HexCoords * HexCoords list // Coords of target, path to bomb-dropping site.
     | Unload of HexCoords list * HexCoords
     | Load of HexCoords list * int // Id of the unit
     | DirectAttack of HexCoords list
@@ -115,7 +115,7 @@ let getOrder (gs : GameState) (player : int) =
                     }
                    |> Seq.exists (fun target -> canBomb(unit, target))
             then
-                canMove (dist destination) (unit.moves)
+                canMoveToNeighbour destination
             else
                 None
 
@@ -244,7 +244,7 @@ let getOrder (gs : GameState) (player : int) =
                 yield Bombard destination
 
             match canBomb() with
-            | Some path -> yield Bomb path
+            | Some path -> yield Bomb (destination, path)
             | None -> ()
 
             match canDirectAttack() with
@@ -351,7 +351,7 @@ let executeOrders (gs : GameState) (player : int) (orders : Order[]) =
         match order with
         | Move path | DirectAttack path | Conquer path | DockAt path | LandAt path ->
             Normal { u with coords = getDestination path }
-        | Bomb path ->
+        | Bomb (_, path) ->
             match u.specific with
             | Bomber(Airborne, fuel, BomberTransport.Bombs n) ->
                 Normal { u with coords = getDestination path;
@@ -400,7 +400,7 @@ let extractAttackOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
                 match order with
                 | Order.Bombard coords -> Some (coords, Remote)
                 | Order.DirectAttack path -> Some (path |> List.rev |> List.head, Melee)
-                | Order.Bomb path -> Some (path |> List.rev |> List.head, Remote)
+                | Order.Bomb (coords, _) -> Some (coords, Remote)
                 | _ -> None
             match coords_and_attack with
             | Some (coords, attack) ->
