@@ -10,7 +10,7 @@ let getValidOrders (state : GameState) (player : int) =
     let getUnitOrders =
         getOrder state player
 
-    let getUnitOrders u =
+    let getUnitOrders (_, u) =
         let destinations =
             getAllWithin (getMovementRange u.specific)
             |> Array.filter (fun (HexCoords(_, y)) -> y >= 0 && y < width)
@@ -57,7 +57,7 @@ let evalHealth (gs : GameState) (player : int) =
         | Transport (_, transported) ->
             let transported_value =
                 transported
-                |> List.sumBy
+                |> Array.sumBy
                     (function
                      | TransportedUnit.AntiAircraft (Health h) -> (1.0f + h) * anti_aircraft_value
                      | TransportedUnit.Artillery (Health h) -> (1.0f + h) * artillery_value
@@ -70,7 +70,7 @@ let evalHealth (gs : GameState) (player : int) =
         | Carrier (_, transported) ->
             let transported_value =
                 transported
-                |> List.sumBy
+                |> Array.sumBy
                     (function
                      | CarriedAircraft.Fighter (Health h) -> (1.0f + h) * fighter_value
                      | CarriedAircraft.Bomber (transported, Health h) -> (1.0f + h) * evalBomberValue(transported))
