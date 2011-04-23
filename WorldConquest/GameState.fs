@@ -388,36 +388,46 @@ type AttackType =
 
 type AttackOrder =
     {  player : PlayerId
-       unit : int
+       unit : UnitIndex
        coords : HexCoords
        attack : AttackType  }
 
 let extractAttackOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
-    let getRootUnitOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
-        match idx with
-        | Root idx ->
-            let coords_and_attack =
+    let getUnitOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+        let coords_and_attack =
+            if
+                match idx with
+                | UnitIndex.Root _ -> true
+                | UnitIndex.Transported (idx, _) ->
+                    match u.specific, units.[idx].specific with
+                    | AirUnit, Carrier _ -> true
+                    | _ -> false
+                | _ -> false
+            then
                 match order with
                 | Order.Bombard coords -> Some (coords, Remote)
                 | Order.DirectAttack path -> Some (path |> List.rev |> List.head, Melee)
                 | Order.Bomb (coords, _) -> Some (coords, Remote)
                 | _ -> None
-            match coords_and_attack with
-            | Some (coords, attack) ->
-                [|
-                    {  player = PlayerId player;
-                       unit = idx;
-                       coords = coords;
-                       attack = attack  }
-                |]
-            | None -> Array.empty
-        | _ -> Array.empty
+            else
+                None
 
-    let fetchRootUnitOrder = mkFetchOrderMap getRootUnitOrder orders
-    playerUnitMap fetchRootUnitOrder (fun _ -> true) units
+        match coords_and_attack with
+        | Some (coords, attack) ->
+            [|
+                {  player = PlayerId player;
+                    unit = idx;
+                    coords = coords;
+                    attack = attack  }
+            |]
+        | None -> Array.empty
+
+    let fetchUnitOrder = mkFetchOrderMap getUnitOrder orders
+    playerUnitMap fetchUnitOrder (fun _ -> true) units
     |> Array.concat
 
-let injureUnits (gs : GameState) (player : int) (orders : AttackOrder[]) =
+
+let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
 
     let enemyUnits =
         [|
