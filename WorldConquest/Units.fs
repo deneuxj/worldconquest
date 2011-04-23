@@ -102,17 +102,32 @@ let anti_aircraft_cost = 5
 let battleship_cost = 30
 
 // Health points. Basic damage per hit is 3.0f
-let infantry_hp = 3.0f
-let tank_hp = 6.0f
-let transport_hp = 3.0f
-let destroyer_hp = 10.0f
-let submarine_hp = 6.0f
-let carrier_hp = 15.0f
-let fighter_hp = 6.0f
-let bomber_hp = 3.0f
-let artillery_hp = 3.0f
-let anti_aircraft_hp = 3.0f
-let battleship_hp = 20.0f
+let base_damage = 3.0f
+
+let infantry_hp = base_damage
+let tank_hp = 2.0f * base_damage
+let transport_hp = base_damage
+let destroyer_hp = 3.0f * base_damage
+let submarine_hp = 2.0f * base_damage
+let carrier_hp = 5.0f * base_damage
+let fighter_hp = 2.0f * base_damage
+let bomber_hp = base_damage
+let artillery_hp = base_damage
+let anti_aircraft_hp = base_damage
+let battleship_hp = 7.0f * base_damage
+
+let getHealthPoints = function
+    | Infantry -> infantry_hp
+    | Tank -> tank_hp
+    | Transport _ -> transport_hp
+    | Destroyer _ -> destroyer_hp
+    | Submarine _ -> submarine_hp
+    | Carrier _ -> carrier_hp
+    | Fighter _ -> fighter_hp
+    | Bomber _ -> bomber_hp
+    | Artillery -> artillery_hp
+    | AntiAircraft -> anti_aircraft_hp
+    | Battleship _ -> battleship_hp
 
 let fighter_fuel_range = 18
 let bomber_fuel_range = 24

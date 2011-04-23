@@ -15,3 +15,22 @@ Ca X  X  X  X  +1 -1 -1 -2 0  X    X    X    X
 Fi +1 +1 +1 0  +2 0  0  0  0  +2   0    +2   +1
 Bo +1 +1 +1 -1 +2 +1 +1 +1 +1 +2   -1   +2   0
 Bo 0  0  0  0  +1 0  0  0  0  0    X    0    X      bombing run
+
+Defence:
+   In Ta Ar AA Tr De Su Ba Ca Fi-l Fi-a Bo-l Bo-a
+In 0  0  0  0  .  0  0  0  0  .    X    .    X
+Ta 0  0  0  0  .  -1 0  -1 0  .    X    .    X
+Ar -1 -1 0  0  .  -1 0  -1 0  .    X    .    X
+Ar .  .  .  .  .  .  .  .  .  .    X    .    X      bombard
+AA -1 -1 0  0  .  -1 0  -1 0  .    X    .    X
+AA X  X  X  X  X  X  X  X  X  X    .    X    .      bombard
+Tr X  X  X  X  .  X  X  X  X  .    X    .    X
+De X  X  X  X  .  0  0  0  0  .    X    .    X
+Su X  X  X  X  .  0  0  0  0  .    X    .    X      sneak
+Su X  X  X  X  .  -1 0  0  0  .    X    .    X
+Ba X  X  X  X  .  0  0  0  0  .    X    .    X
+Ba .  .  .  .  .  .  .  .  .  .    .    .    .      bombard
+Ca X  X  X  X  .  -1 -1 -1 -1 .    X    .    X
+Fi 0  0  0  -1 .  0  X  0  0  .    0    .    0
+Bo 0  0  0  -1 .  0  X  0  0  .    -1   .    0
+Bo .  .  .  .  .  .  .  .  .  .    .    .    .      bombing run
