@@ -62,18 +62,31 @@ let getBombardRange = function
     | AntiAircraft -> 4
     | Battleship _ -> 4
 
+// Movement ranges
+let infantry_range = 1
+let tank_range = 2
+let transport_range = 2
+let destroyer_range = 4
+let submarine_range = 3
+let carrier_range = 3
+let fighter_range = 9
+let bomber_range = 6
+let artillery_range = 1
+let anti_aircraft_range = 1
+let battleship_range = 3
+
 let getMovementRange = function
-    | Infantry -> 1
-    | Tank -> 2
-    | Transport _ -> 2
-    | Destroyer _ -> 4
-    | Submarine _ -> 3
-    | Carrier _ -> 3
-    | Fighter _ -> 9
-    | Bomber _ -> 6
-    | Artillery -> 1
-    | AntiAircraft -> 1
-    | Battleship _ -> 3
+    | Infantry -> infantry_range
+    | Tank -> tank_range
+    | Transport _ -> transport_range
+    | Destroyer _ -> destroyer_range
+    | Submarine _ -> submarine_range
+    | Carrier _ -> carrier_range
+    | Fighter _ -> fighter_range
+    | Bomber _ -> bomber_range
+    | Artillery -> artillery_range
+    | AntiAircraft -> anti_aircraft_range
+    | Battleship _ -> battleship_range
 
 let getHealth = function
     | Infantry -> 1.0f
