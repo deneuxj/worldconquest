@@ -1,5 +1,7 @@
 ﻿module GameState
 
+open System.Collections.Generic
+
 open Units
 open HexTiling
 open Resource
@@ -85,7 +87,7 @@ type Order =
     | Bomb of HexCoords * HexCoords list // Coords of target, path to bomb-dropping site.
     | Unload of HexCoords list * HexCoords
     | Load of HexCoords list * int // Id of the unit
-    | DirectAttack of HexCoords list
+    | DirectAttack of HexCoords * HexCoords list // Coords of unit to attack, path to the site.
     | Conquer of HexCoords list
     | DockAt of HexCoords list
     | LandAt of HexCoords list
@@ -309,7 +311,7 @@ let getOrder (gs : GameState) (player : int) =
             | None -> ()
 
             match canDirectAttack() with
-            | Some path -> yield DirectAttack path
+            | Some path -> yield DirectAttack (destination, path)
             | None -> ()
 
             match canLoad() with
@@ -396,56 +398,43 @@ type UnitTempState =
     | Killed of UnitInfo
     | Normal of UnitInfo
 
-let mkFetchOrderMap f orders =
-    let it = (orders :> System.Collections.Generic.IEnumerable<Order>).GetEnumerator()
+let mkFetchOrderMap f (orders : 'O seq)=
+    let it = orders.GetEnumerator()
     fun u ->
         let order = it.MoveNext() |> fun _ -> it.Current
         f (u, order)
 
-let executeOrders (gs : GameState) (player : int) (orders : Order[]) =
-    let width = gs.terrain.GetLength(0)
-    let executeOrder (u : UnitInfo, order : Order) =
-        let getDestination = function
-        | [] -> u.coords
-        | path -> path |> List.rev |> List.head
 
-        match order with
-        | Move path | DirectAttack path | Conquer path | DockAt path | LandAt path ->
-            Normal { u with coords = getDestination path }
-        | Bomb (_, path) ->
-            match u.specific with
-            | Bomber(Airborne, fuel, BomberTransport.Bombs n) ->
-                Normal { u with coords = getDestination path;
-                                specific = Bomber(Airborne, fuel, BomberTransport.Bombs (n - 1)) }
-            | _ -> failwith "Only airborne bombers carrying bombs may bomb"
-        | Bombard _ ->
-            Normal u
-        | DoNothing ->
-            Normal u
-        | Load (path, idx_transport) ->
-            Embarking ({ u with coords = getDestination path }, idx_transport)
-        | Unload (path, _) ->
-            match u.specific with
-            | Transport(docked, _) ->
-                Normal { u with coords = getDestination path;
-                                specific = Transport(docked, [||]) }
-            | Bomber(landed, fuel, _) ->
-                Normal { u with coords = getDestination path;
-                                specific = Bomber(landed, fuel, BomberTransport.Bombs 0) }
-            | _ -> failwith "Only transports and bombers can unload their transported units"
+type MoveOrder =
+    | LateMove of int * HexCoords list
+    | EarlyMove of int * HexCoords list
 
-    let fetchAndExecuteOrder =
-        mkFetchOrderMap
-            (fun ((_,u), order) -> [| executeOrder (u, order) |])
-            orders
-        
-    playerUnitMap fetchAndExecuteOrder (fun _ -> true) gs.player_units.[player]
+let extractMoveOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
+    let getUnitOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+        match idx with
+        | Root idx ->
+            match order with
+            | Order.Conquer path     
+            | Order.DockAt path
+            | Order.LandAt path
+            | Order.Load (path, _)
+            | Order.Move path
+            | Order.Unload (path, _) -> [| LateMove(idx, path) |]
+            
+            | Order.Bomb (_, path)
+            | Order.DirectAttack (_, path) -> [| EarlyMove(idx, path) |]
+
+            | _ -> Array.empty
+        | _ -> Array.empty
+            
+    let fetchUnitOrder = mkFetchOrderMap getUnitOrder orders
+    playerUnitMap fetchUnitOrder (fun _ -> true) units
     |> Array.concat
 
 
 type AttackType =
-    | Remote
-    | Melee
+    | Remote  // The attacker is safe
+    | Melee   // One of the defenders (the most dangerous one) will strike back
 
 type AttackOrder =
     {  player : PlayerId
@@ -466,9 +455,9 @@ let extractAttackOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
                 | _ -> false
             then
                 match order with
+                | Order.Bomb (coords, _)
                 | Order.Bombard coords -> Some (coords, Remote)
-                | Order.DirectAttack path -> Some (path |> List.rev |> List.head, Melee)
-                | Order.Bomb (coords, _) -> Some (coords, Remote)
+                | Order.DirectAttack (coords, _) -> Some (coords, Melee)
                 | _ -> None
             else
                 None
@@ -674,6 +663,25 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
     damages_to_victims, damages_to_attackers
 
 
+let accumulateDamage (damages_to_victims, damages_to_attackers) =
+    let damages_to_victims =
+        damages_to_victims
+        |> List.map (fun (id : PlayerId, idx, damage) -> (id, Root idx, damage))
+
+    Seq.concat [damages_to_victims; damages_to_attackers]
+    |> Seq.groupBy (fun (id, idx, _) -> (id, idx))
+    |> Seq.map (fun ((id, idx), damages) -> ((id, idx), Seq.sumBy (fun (_, _, damage : float32) -> damage) damages))
+    |> dict
+
+
+let getUnitDeaths (gs : GameState) (accumulated_damages : IDictionary<PlayerId * UnitIndex, float32>) =
+    accumulated_damages
+    |> Seq.map (fun kvp -> (kvp.Key, kvp.Value))
+    |> Seq.filter (fun ((PlayerId id, idx), damage) -> (getUnitByIndex (gs.player_units.[id]) idx).health <= damage)
+    |> Seq.map fst
+    |> Set.ofSeq
+
+
 type EmbarkOrder =
     { transporter : int  // Index of a root unit
       unit : UnitIndex } // The unit embarking
@@ -687,3 +695,46 @@ let extractEmbarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
     let fetchUnitOrder = mkFetchOrderMap getUnitOrder orders
     playerUnitMap fetchUnitOrder (fun _ -> true) units
     |> Array.concat
+
+let filterDeadEmbarkOrders (isDead : PlayerId * UnitIndex -> bool) (player : int) (orders : EmbarkOrder[]) =
+    let player = PlayerId player
+    orders
+    |> Array.filter (fun order -> not (isDead(player, Root order.transporter) || isDead(player, order.unit)))
+
+type DisembarkOrder = Disembark of UnitIndex * HexCoords list
+
+let extractDisembarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
+    let early_orders =
+        let getEarlyOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+            match idx with
+            | Transported _
+            | Transported2 _ ->
+                match order with
+                | Order.DirectAttack (_, path)
+                | Order.Bomb (_, path) ->
+                    [| Disembark (idx, path) |]
+                | _ -> Array.empty
+            | _ -> Array.empty
+
+        let fetchUnitOrder = mkFetchOrderMap getEarlyOrder orders
+        playerUnitMap fetchUnitOrder (fun _ -> true) units
+        |> Array.concat
+
+    let late_orders =
+        let getLateOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+            match idx, order with
+            | _, Order.Unload (_, target) -> [| Disembark (idx, [target]) |]
+            | Transported _, Order.Move path
+            | Transported2 _, Order.Move path -> [| Disembark (idx, path) |]
+            | _ -> Array.empty
+
+        let fetchUnitOrder = mkFetchOrderMap getLateOrder orders
+        playerUnitMap fetchUnitOrder (fun _ -> true) units
+        |> Array.concat
+
+    (early_orders, late_orders)
+
+let filterDeadDisembarkOrders (isDead : PlayerId * UnitIndex -> bool) (player : int) (orders : DisembarkOrder[]) =
+    let player = PlayerId player
+    orders
+    |> Array.filter (fun (Disembark(idx, _)) -> not (isDead(player, idx)))
