@@ -230,7 +230,7 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
 
                         | false, _ -> yield 0.0f
                     ]
-                    |> List.min
+                    |> List.max
 
                 if relative_damage > 0.0f then
                     yield (PlayerId player, attack.unit, relative_damage)
