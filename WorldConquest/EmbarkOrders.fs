@@ -45,9 +45,37 @@ let extractDisembarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]
         |> Array.concat
 
     let late_orders =
+        let childOf (parent : UnitIndex, sub : int) =
+            match parent with
+            | Root idx -> Transported(idx, sub)
+            | Transported (root, idx) -> Transported2(root, idx, sub)
+            | Transported2 _ -> failwith "Transported2 cannot have children"
+
         let getLateOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
             match idx, order with
-            | _, Order.Unload (_, target) -> [| Disembark (idx, [target]) |]
+            | _, Order.Unload (_, target) ->
+                match u.specific with
+                | UnitTypes.Transport(_, transported) ->
+                    [|
+                        for sub in 0 .. transported.Length - 1 do
+                            yield Disembark(childOf(idx, sub), [target])
+                    |]
+                | UnitTypes.Carrier(_, transported) ->
+                    [|
+                        for sub in 0 .. transported.Length - 1 do
+                            yield Disembark(childOf(idx, sub), [target])
+                    |]
+                | UnitTypes.Bomber(_, _, BomberTransport.Infantry _) ->
+                    [| Disembark(childOf(idx, 0), [target]) |]
+                | UnitTypes.Bomber(_, _, BomberTransport.Bombs _)
+                | UnitTypes.AntiAircraft
+                | UnitTypes.Artillery
+                | UnitTypes.Battleship _
+                | UnitTypes.Destroyer _
+                | UnitTypes.Fighter _
+                | UnitTypes.Infantry
+                | UnitTypes.Submarine _
+                | UnitTypes.Tank -> failwith <| sprintf "Cannot unload all from %A" u
             | Transported _, Order.Move path
             | Transported2 _, Order.Move path -> [| Disembark (idx, path) |]
             | _ -> Array.empty
