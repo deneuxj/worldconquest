@@ -3,7 +3,7 @@
 open GameState
 open HexTiling
 open Units
-
+open Orders
 
 let getValidOrders (state : GameState) (player : int) =
     let width = state.terrain.GetLength(0)

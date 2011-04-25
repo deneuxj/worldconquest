@@ -3,6 +3,7 @@
 open Units
 open GameState
 open HexTiling
+open Orders
 
 type MoveOrder =
     | LateMove of int * HexCoords list

@@ -5,7 +5,7 @@ open System.Collections.Generic
 open GameState
 open Units
 open HexTiling
-
+open Orders
 
 type AttackType =
     | Remote  // The attacker is safe
