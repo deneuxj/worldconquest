@@ -18,7 +18,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="108.0" x="355.0" y="60.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" fontFamily="Dialog" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="19.92626953125" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="95.0380859375" x="6.48095703125" y="5.036865234375">Dispatch orders</y:NodeLabel>
           <y:Shape type="rectangle"/>
@@ -29,7 +29,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="128.0" x="165.0" y="210.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" fontFamily="Dialog" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="19.92626953125" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="110.95166015625" x="8.524169921875" y="5.036865234375">compute damages</y:NodeLabel>
           <y:Shape type="rectangle"/>
@@ -40,7 +40,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="56.0" x="136.0" y="0.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="29.34765625" x="13.326171875" y="5.6494140625">units</y:NodeLabel>
           <y:Shape type="octagon"/>
@@ -51,7 +51,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="56.0" x="408.0" y="0.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="38.013671875" x="8.9931640625" y="5.6494140625">orders</y:NodeLabel>
           <y:Shape type="octagon"/>
@@ -62,7 +62,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="56.0" x="201.0" y="157.5"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="42.015625" x="6.9921875" y="5.6494140625">attacks</y:NodeLabel>
           <y:Shape type="octagon"/>
@@ -73,7 +73,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="45.0" width="116.0" x="19.0" y="150.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="103.052734375" x="6.4736328125" y="13.1494140625">root -&gt; transported</y:NodeLabel>
           <y:Shape type="octagon"/>
@@ -84,7 +84,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="45.0" width="92.0" x="567.0" y="150.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="74.693359375" x="8.6533203125" y="5.798828125">attack moves
 (early)</y:NodeLabel>
@@ -108,7 +108,7 @@ units</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="49.0" width="74.0" x="145.0" y="389.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="60.02734375" x="6.986328125" y="15.1494140625">units killed</y:NodeLabel>
           <y:Shape type="octagon"/>
@@ -131,7 +131,7 @@ report</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="45.0" width="116.0" x="360.0" y="543.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="103.052734375" x="6.4736328125" y="5.798828125">transported -&gt; root
 (early)</y:NodeLabel>
@@ -143,7 +143,7 @@ report</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="128.0" x="220.0" y="483.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" fontFamily="Dialog" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="19.92626953125" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="83.498046875" x="22.2509765625" y="5.036865234375">Check unload</y:NodeLabel>
           <y:Shape type="rectangle"/>
@@ -154,7 +154,7 @@ report</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="45.0" width="116.0" x="287.0" y="150.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="103.052734375" x="6.4736328125" y="5.798828125">transported -&gt; root
 (late)</y:NodeLabel>
@@ -166,7 +166,7 @@ report</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="49.0" width="74.0" x="192.0" y="260.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="53.365234375" x="10.3173828125" y="15.1494140625">damages</y:NodeLabel>
           <y:Shape type="octagon"/>
@@ -177,7 +177,7 @@ report</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="128.0" x="118.0" y="339.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" fontFamily="Dialog" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="19.92626953125" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="82.05712890625" x="22.971435546875" y="5.036865234375">detect deaths</y:NodeLabel>
           <y:Shape type="rectangle"/>
@@ -188,7 +188,7 @@ report</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="128.0" x="62.0" y="483.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" fontFamily="Dialog" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="19.92626953125" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="87.80810546875" x="20.095947265625" y="5.036865234375">Check embark</y:NodeLabel>
           <y:Shape type="rectangle"/>
@@ -199,7 +199,7 @@ report</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="45.0" width="116.0" x="214.0" y="543.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="103.052734375" x="6.4736328125" y="5.798828125">transported -&gt; root
 (late)</y:NodeLabel>
@@ -211,7 +211,7 @@ report</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="45.0" width="116.0" x="68.0" y="543.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="103.052734375" x="6.4736328125" y="13.1494140625">root -&gt; transported</y:NodeLabel>
           <y:Shape type="octagon"/>
@@ -222,7 +222,7 @@ report</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="45.0" width="92.0" x="445.0" y="150.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="64.017578125" x="13.9912109375" y="13.1494140625">travel (late)</y:NodeLabel>
           <y:Shape type="octagon"/>
