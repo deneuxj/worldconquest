@@ -256,3 +256,81 @@ let getUnitDeaths (gs : GameState) (accumulated_damages : IDictionary<PlayerId *
     |> Seq.filter (fun ((PlayerId id, idx), damage) -> (getUnitByIndex (gs.player_units.[id]) idx).health <= damage)
     |> Seq.map fst
     |> Set.ofSeq
+
+
+let applyDamage (gs : GameState) (getDamage : (PlayerId * UnitIndex) -> float32) =
+    { gs with
+        player_units =
+            gs.player_units
+            |> Array.mapi (fun i units ->
+                let player = PlayerId i
+                units
+                |> Array.mapi (fun root unit ->
+                        let unit =
+                            match getDamage(player, Root root) with
+                            | 0.0f -> unit
+                            | x -> { unit with health = unit.health - x }
+                        match unit.specific with
+                        | UnitTypes.AntiAircraft
+                        | UnitTypes.Artillery
+                        | UnitTypes.Battleship _
+                        | UnitTypes.Destroyer _
+                        | UnitTypes.Fighter _
+                        | UnitTypes.Infantry
+                        | UnitTypes.Submarine _
+                        | UnitTypes.Bomber(_, _, BomberTransport.Bombs _)
+                        | UnitTypes.Tank -> unit
+
+                        | UnitTypes.Transport(docked, transported) ->
+                            { unit with
+                                specific =
+                                UnitTypes.Transport(docked,
+                                    transported
+                                    |> Array.mapi (fun sub t ->
+                                        let idx = Transported(root, sub)
+                                        let x = getDamage(player, idx)
+                                        if x = 0.0f then
+                                            t
+                                        else
+                                            match t with
+                                            | TransportedUnit.AntiAircraft (Health h) ->
+                                                TransportedUnit.AntiAircraft (Health (h - x))
+                                            | TransportedUnit.Artillery (Health h) ->
+                                                TransportedUnit.AntiAircraft (Health (h - x))
+                                            | TransportedUnit.Infantry (Health h) ->
+                                                TransportedUnit.Infantry (Health (h - x))
+                                            | TransportedUnit.Tank (Health h) ->
+                                                TransportedUnit.Tank (Health (h - x))
+                                    )
+                                )
+                            }
+
+                        | UnitTypes.Bomber(landed, fuel, BomberTransport.Infantry(Health h)) ->
+                            match getDamage(player, Transported(root, 0)) with
+                            | 0.0f -> unit
+                            | x -> { unit with
+                                        specific =
+                                        UnitTypes.Bomber(landed, fuel, BomberTransport.Infantry(Health(h - x))) }
+
+                        | UnitTypes.Carrier(docked, aircrafts) ->
+                            { unit with
+                                specific =
+                                UnitTypes.Carrier(docked,
+                                    aircrafts
+                                    |> Array.mapi (fun sub t ->
+                                        let idx = Transported(root, sub)
+                                        let x = getDamage(player, idx)
+                                        match t with
+                                        | CarriedAircraft.Fighter (Health h) ->
+                                            CarriedAircraft.Fighter(Health(h - x))
+                                        | CarriedAircraft.Bomber (BomberTransport.Bombs _ as bombs, Health h) ->
+                                            CarriedAircraft.Bomber(bombs, Health(h - x))
+                                        | CarriedAircraft.Bomber (BomberTransport.Infantry(Health h2), Health h) ->
+                                            let x2 = getDamage(player, Transported2(root, sub, 0))
+                                            CarriedAircraft.Bomber(BomberTransport.Infantry(Health(h2 - x2)), Health(h - x))
+                                    )
+                                )
+                            }
+                    )
+            )
+    }
