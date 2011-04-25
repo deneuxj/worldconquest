@@ -57,6 +57,10 @@
     <Compile Include="Resource.fs" />
     <Compile Include="MapCreation.fs" />
     <Compile Include="GameState.fs" />
+    <Compile Include="Orders.fs" />
+    <Compile Include="MoveOrders.fs" />
+    <Compile Include="AttackOrders.fs" />
+    <Compile Include="EmbarkOrders.fs" />
     <Compile Include="Ai.fs" />
     <None Include="Script.fsx" />
     <None Include="XnaWinForm.fsx" />
