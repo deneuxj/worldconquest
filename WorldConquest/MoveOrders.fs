@@ -4,6 +4,7 @@ open Units
 open GameState
 open HexTiling
 open Orders
+open AttackOrders
 
 type MoveOrder =
     | LateMove of int * HexCoords list
@@ -30,3 +31,10 @@ let extractMoveOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
     let fetchUnitOrder = mkFetchOrderMap getUnitOrder orders
     playerUnitMap fetchUnitOrder (fun _ -> true) units
     |> Array.concat
+
+let filterDeadMoveOrders (isDead : UnitIndex -> bool) (orders : MoveOrder[]) =
+    orders
+    |> Array.filter
+        (function
+         | LateMove (idx, _) -> not (isDead(Root idx))
+         | EarlyMove _ -> true)
