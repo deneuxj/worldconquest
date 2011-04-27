@@ -119,7 +119,7 @@ units</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="49.0" width="74.0" x="630.0" y="683.92626953125"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="35.34765625" x="19.326171875" y="7.798828125">travel
 report</y:NodeLabel>
@@ -267,7 +267,7 @@ and roots</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="128.0" x="571.0" y="608.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" fontFamily="Dialog" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="19.92626953125" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="35.7890625" x="46.10546875" y="5.036865234375">Move</y:NodeLabel>
           <y:Shape type="rectangle"/>

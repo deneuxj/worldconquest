@@ -38,3 +38,21 @@ let filterDeadMoveOrders (isDead : UnitIndex -> bool) (orders : MoveOrder[]) =
         (function
          | LateMove (idx, _) -> not (isDead(Root idx))
          | EarlyMove _ -> true)
+
+let applyMoves (orders : MoveOrder[]) (units : UnitInfo[]) =
+    let orders =
+        orders
+        |> Seq.map
+            (function
+             | LateMove (id, path) -> (id, path)
+             | EarlyMove (id, path) -> (id, path))
+        |> dict
+
+    [|
+        for i in 0 .. units.Length - 1 do
+            yield
+                match orders.TryGetValue(i) with
+                | false, _
+                | true, [] -> units.[i]
+                | true, (_ :: _ as path) -> { units.[i] with coords = path |> List.rev |> List.head }
+    |]
