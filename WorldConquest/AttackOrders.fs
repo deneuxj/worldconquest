@@ -62,7 +62,7 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
                 if i <> player then
                     for i2 in 0..gs.player_units.[i].Length - 1 do
                         let u = gs.player_units.[i].[i2]
-                        yield victim, i, u.coords
+                        yield victim, i2, u.coords
         |]
         |> Seq.groupBy (fun (victim, i, coords) -> coords)
         |> dict
