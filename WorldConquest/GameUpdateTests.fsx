@@ -103,6 +103,52 @@ let bombardTest() =
                 |]
         }
 
+    let gs' =
+        GameStateUpdate.update gs
+            [|
+                Array.unzip p0 |> snd ;
+                Array.unzip p1 |> snd
+            |]
+
+    match gs'.player_units with
+    | [| _; [| { health = x } |] |] when x < 1.0f -> true // Injured
+    | [| _; [||] |] -> true  // Killed
+    | _ -> false
+
+    |> assertTrue (printfn "%s") "BOMBARD"
+
+
+let attackTest() =
+    let u0 = ofSq(width / 2, width / 2)
+    let u1 = ofSq(width / 2 + 1, width / 2 + 1)
+
+    let p0 : (Units.UnitInfo * _)[] =
+        [|
+            { coords = u0 ;
+                health = 1.0f ;
+                moves = Units.tank_range ;
+                specific = Units.UnitTypes.Tank },
+            Orders.DirectAttack(u1, [])
+        |]
+
+    let p1 : (Units.UnitInfo * _)[] =
+        [|
+            { coords = u1 ;
+                health = 1.0f ;
+                moves = Units.infantry_range ;
+                specific = Units.UnitTypes.Infantry },
+            Orders.DoNothing
+        |]
+
+    let gs =
+       { default_gs with
+            player_units =
+                [|
+                    Array.unzip p0 |> fst ;
+                    Array.unzip p1 |> fst
+                |]
+        }
+
     printfn "%A" gs
 
     let gs' =
@@ -119,4 +165,4 @@ let bombardTest() =
     | [| _; [||] |] -> true  // Killed
     | _ -> false
 
-    |> assertTrue (printfn "%s") "BOMBARD"
+    |> assertTrue (printfn "%s") "DIRECT ATTACK"
