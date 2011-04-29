@@ -11,9 +11,14 @@ type PlayerId = PlayerId of int
 
 type GameState =
     {  terrain : Terrain[,]
-       getResourceAt : HexCoords -> (Resource * PlayerId option) option
-       getResourcesOf : PlayerId -> (HexCoords * Resource) list
+       resource_at : IDictionary<HexCoords, (Resource * PlayerId option)>
+       resources_of : (HexCoords * Resource) list []
        player_units : UnitInfo[][]  }
+with
+    member x.getResourceAt pos =
+        match x.resource_at.TryGetValue(pos) with
+        | true, res -> Some res
+        | false, _ -> None
 
 type UnitIndex =
     | Root of int
