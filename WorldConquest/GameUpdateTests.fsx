@@ -12,6 +12,9 @@
 #load "EmbarkOrders.fs"
 #load "GameStateUpdate.fs"
 
+#load "Ai.fs"
+
+
 let width = 32
 
 let terr =
@@ -223,3 +226,91 @@ let stackAttackTest() =
     | _ -> false
 
     |> assertTrue (printfn "%s") "DIRECT ATTACK OF STACK"
+
+
+let randomTest() =
+    let rnd = new System.Random()
+
+    let player_units : Units.UnitInfo[][]=
+        [|
+            for i in 0..3 do
+                yield
+                    [|
+                        for j in 0..99 do
+                            let x = rnd.Next(width)
+                            let y = rnd.Next(width)
+
+                            let coords = ofSq(x, y)
+                            yield match (Terrain.getHex terr coords) with
+                                  | Terrain.Land ->
+                                    match (rnd.Next(7)) with
+                                    | 0 ->
+                                        { coords = coords ;
+                                          moves = Units.anti_aircraft_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.AntiAircraft }
+                                    | 1 ->
+                                        { coords = coords ;
+                                          moves = Units.artillery_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Artillery }
+                                    | 2 ->
+                                        { coords = coords ;
+                                          moves = Units.battleship_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Battleship(Units.Docked) }
+                                    | 3 ->
+                                        { coords = coords ;
+                                          moves = Units.battleship_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Battleship(Units.Docked) }
+                                    | 4 ->
+                                        { coords = coords ;
+                                          moves = Units.tank_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Tank }
+                                    | 5 ->
+                                        { coords = coords ;
+                                          moves = Units.destroyer_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Destroyer(Units.Docked) }
+                                    | _ ->
+                                        { coords = coords ;
+                                          moves = Units.destroyer_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Destroyer(Units.Docked) }
+                                  | Terrain.Sea ->
+                                    { coords = coords ;
+                                      moves = Units.destroyer_range ;
+                                      health = 1.0f ;
+                                      specific = Units.UnitTypes.Destroyer(Units.NotDocked) }
+                    |]
+        |]
+
+    let gs = { default_gs with player_units = player_units }
+
+    let doRound (gs : GameState.GameState) =
+        let possible_orders =
+            [| for player in 0 .. gs.player_units.Length - 1 do
+                yield async { return Ai.getValidOrders gs player }
+            |]
+            |> Async.Parallel
+            |> Async.RunSynchronously
+
+        let random_orders =
+            possible_orders
+            |> Array.map (fun units ->
+                units
+                |> Array.map (fun orders ->
+                    match orders.Length with
+                    | 0 -> Orders.DoNothing
+                    | n ->  orders.[rnd.Next(n - 1)]))
+
+        GameStateUpdate.update gs random_orders
+
+    let mutable gs' = gs
+    for i in 1 .. 10 do
+        printfn "Starting round %d" i
+        gs' <- doRound gs'
+
+    ()
