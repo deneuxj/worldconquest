@@ -65,6 +65,7 @@
     <Compile Include="Ai.fs" />
     <None Include="Script.fsx" />
     <None Include="XnaWinForm.fsx" />
+    <None Include="GameUpdateTests.fsx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\xnautils\XNAUtils\XNAUtils.fsproj">
