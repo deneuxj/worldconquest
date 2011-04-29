@@ -137,7 +137,11 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
                             | Battleship _, Carrier _, Remote
                             | Carrier _, Transport _, Melee
                             | Fighter _, LandUnit, Melee
-                            | Fighter _, Bomber(Airborne, _, _), Melee -> 1.0f
+                            | Fighter _, Bomber(Airborne, _, _), Melee
+                            | Bomber _, Destroyer _, Melee
+                            | Bomber _, Battleship _, Melee
+                            | Bomber _, Carrier _, Melee
+                            | Bomber _, Submarine _, Melee -> 1.0f
 
                             | Infantry, Artillery, Melee
                             | Infantry, AntiAircraft, Melee

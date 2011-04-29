@@ -66,7 +66,18 @@ let getUnitByIndex (units : UnitInfo[]) (idx : UnitIndex) =
                       health = health ;
                       moves = fighter_range ;
                       specific = Fighter(Airborne, Fuel fighter_fuel_range) }
-            | _ -> failwith <| sprintf "Incorrect unit index: root unit is %A, should be a carrier or a transport" transport.specific
+            | Bomber (_, _, units) ->
+                match idx, units with
+                | 0, (BomberTransport.Infantry (Health health)) ->
+                    { coords = transport.coords ;
+                      health = health ;
+                      moves = infantry_range ;
+                      specific = Infantry }
+                | 0, BomberTransport.Bombs _ ->
+                    failwith "Incorrect unit index: leaf unit cannot be bombs"
+                | _, _ ->
+                    failwith <| sprintf "Incorrect unit index %d: Bombers can transport only one unit" idx
+            | _ -> failwith <| sprintf "Incorrect unit index %d,%d: root unit is %A, should be a carrier or a transport" root idx transport.specific
         | Transported2 (root, bomber, idx) ->
             let carrier = units.[root]
             match carrier.specific with
