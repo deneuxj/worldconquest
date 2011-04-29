@@ -82,7 +82,7 @@ let evalHealth (gs : GameState) (player : int) =
 // Resources
 let evalResources (gs : GameState) (player : int) =
     let counts = 
-        gs.getResourcesOf (PlayerId player)
+        gs.resources_of.[player]
         |> Seq.groupBy (fun (_, rsc) -> rsc)
         |> Seq.map (fun (_, items) -> Seq.length items)
         |> Array.ofSeq
