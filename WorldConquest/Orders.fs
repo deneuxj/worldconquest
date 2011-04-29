@@ -169,7 +169,7 @@ let getOrder (gs : GameState) (player : int) =
                 |> List.ofSeq
 
             match candidate_receivers with
-            | [] -> printfn "No candidate receiver"; None
+            | [] -> None
             | idx :: _ ->
                 match canMoveToNeighbour destination with
                 | Some path -> Some (path, idx)
