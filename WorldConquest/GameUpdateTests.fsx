@@ -231,6 +231,44 @@ let stackAttackTest() =
 let randomTest() =
     let rnd = new System.Random()
 
+    let rndTransport docked coords : Units.UnitInfo =
+        let transported_units =
+            [|
+                while rnd.Next(4) <= 2 do
+                    yield match rnd.Next(4) with
+                          | 0 -> Units.TransportedUnit.AntiAircraft(Units.Health 1.0f)
+                          | 1 -> Units.TransportedUnit.Artillery(Units.Health 1.0f)
+                          | 2 -> Units.TransportedUnit.Infantry(Units.Health 1.0f)
+                          | _ -> Units.TransportedUnit.Tank(Units.Health 1.0f)
+            |]
+
+        { coords = coords ;
+          moves = Units.transport_range ;
+          health = 1.0f ;
+          specific = Units.Transport(docked, transported_units)
+        }
+
+    let rndBomberLifted() =
+        match rnd.Next(2) with
+        | 0 -> Units.BomberTransport.Bombs 2
+        | _ -> Units.BomberTransport.Infantry(Units.Health 1.0f)
+
+    let rndCarrier docked coords : Units.UnitInfo =
+        let carried_units =
+            [|
+                while rnd.Next(4) <= 2 do
+                    yield match rnd.Next(2) with
+                          | 0 -> Units.CarriedAircraft.Fighter(Units.Health 1.0f)
+                          | _ ->
+                            Units.CarriedAircraft.Bomber(
+                                rndBomberLifted(),
+                                Units.Health(1.0f))
+            |]
+        { coords = coords ;
+          moves = Units.carrier_range ;
+          health = 1.0f ;
+          specific = Units.Carrier(docked, carried_units) }
+
     let player_units : Units.UnitInfo[][]=
         [|
             for i in 0..3 do
@@ -243,7 +281,7 @@ let randomTest() =
                             let coords = ofSq(x, y)
                             yield match (Terrain.getHex terr coords) with
                                   | Terrain.Land ->
-                                    match (rnd.Next(7)) with
+                                    match (rnd.Next(11)) with
                                     | 0 ->
                                         { coords = coords ;
                                           moves = Units.anti_aircraft_range ;
@@ -261,9 +299,9 @@ let randomTest() =
                                           specific = Units.UnitTypes.Battleship(Units.Docked) }
                                     | 3 ->
                                         { coords = coords ;
-                                          moves = Units.battleship_range ;
+                                          moves = Units.infantry_range ;
                                           health = 1.0f ;
-                                          specific = Units.UnitTypes.Battleship(Units.Docked) }
+                                          specific = Units.UnitTypes.Infantry }
                                     | 4 ->
                                         { coords = coords ;
                                           moves = Units.tank_range ;
@@ -274,12 +312,53 @@ let randomTest() =
                                           moves = Units.destroyer_range ;
                                           health = 1.0f ;
                                           specific = Units.UnitTypes.Destroyer(Units.Docked) }
+                                    | 6 -> rndTransport Units.Docked coords
+                                    | 7 -> rndCarrier Units.Docked coords
+                                    | 8 ->
+                                        { coords = coords ;
+                                          moves = Units.submarine_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Submarine(Units.Docked, Units.NotStealthy) }
+                                    | 9 ->
+                                        { coords = coords ;
+                                          moves = Units.fighter_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Fighter(Units.Landed, Units.Fuel Units.fighter_fuel_range) }
+                                    | 10 ->
+                                        { coords = coords ;
+                                          moves = Units.bomber_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Bomber(Units.Landed, Units.Fuel Units.bomber_fuel_range, rndBomberLifted()) }
                                     | _ ->
                                         { coords = coords ;
                                           moves = Units.destroyer_range ;
                                           health = 1.0f ;
                                           specific = Units.UnitTypes.Destroyer(Units.Docked) }
                                   | Terrain.Sea ->
+                                    match (rnd.Next(7)) with
+                                    | 0 ->
+                                        { coords = coords ;
+                                          moves = Units.battleship_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Battleship(Units.NotDocked) }
+                                    | 1 -> rndTransport Units.NotDocked coords
+                                    | 2 -> rndCarrier Units.NotDocked coords
+                                    | 3 ->
+                                        { coords = coords ;
+                                          moves = Units.submarine_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Submarine(Units.NotDocked, Units.NotStealthy) }
+                                    | 4 ->
+                                        { coords = coords ;
+                                          moves = Units.fighter_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Fighter(Units.Airborne, Units.Fuel Units.fighter_fuel_range) }
+                                    | 5 ->
+                                        { coords = coords ;
+                                          moves = Units.bomber_range ;
+                                          health = 1.0f ;
+                                          specific = Units.UnitTypes.Bomber(Units.Airborne, Units.Fuel Units.bomber_fuel_range, rndBomberLifted()) }
+                                    | _ -> 
                                     { coords = coords ;
                                       moves = Units.destroyer_range ;
                                       health = 1.0f ;
