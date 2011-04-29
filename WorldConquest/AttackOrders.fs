@@ -247,7 +247,6 @@ let accumulateDamage (damages_to_victims, damages_to_attackers) =
     Seq.concat [damages_to_victims; damages_to_attackers]
     |> Seq.groupBy (fun (id, idx, _) -> (id, idx))
     |> Seq.map (fun ((id, idx), damages) -> ((id, idx), Seq.sumBy (fun (_, _, damage : float32) -> damage) damages))
-    |> dict
 
 
 let getUnitDeaths (gs : GameState) (accumulated_damages : IDictionary<PlayerId * UnitIndex, float32>) =
