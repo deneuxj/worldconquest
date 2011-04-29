@@ -187,3 +187,55 @@ let shrinkUnitTree (embark : EmbarkOrder[]) (disembark : DisembarkOrder[]) (unit
                     | UnitTypes.Submarine _
                     | UnitTypes.Tank -> failwith <| sprintf "Bad UnitIndex: %A can't transport units" unit
     |]
+
+let update (gs : GameState) (orders : Order[][]) =
+    let damages =
+        seq {
+            for player in 0 .. gs.player_units.Length - 1 do
+                let player_id = PlayerId player
+                let attacks = extractAttackOrders gs.player_units.[player] player orders.[player]
+                yield! computeDamages gs player attacks |> accumulateDamage                
+        }
+        |> dict
+
+    let getDamages u =
+        match damages.TryGetValue(u) with
+        | false, _ -> 0.0f
+        | true, x -> x
+
+    let gs = applyDamage gs getDamages
+
+    let dead_units = getUnitDeaths gs damages
+
+    let isDead u =
+        dead_units.Contains u
+
+    let player_units =
+        [|
+            for player in 0 .. gs.player_units.Length - 1 do
+                let player_id = PlayerId player
+                let units = gs.player_units.[player]
+                let orders = orders.[player]
+
+                let isThisDead u = isDead(player_id, u)
+                let move_orders =
+                    extractMoveOrders units player orders
+                    |> filterDeadMoveOrders isThisDead
+
+                let early_disembark, late_disembark = extractDisembarkOrders units player orders
+                let late_disembark = filterDeadDisembarkOrders isDead player late_disembark
+                let disembark_orders = Array.concat [early_disembark ; late_disembark]
+
+                let embark_orders =
+                    extractEmbarkOrders units player orders
+                    |> filterDeadEmbarkOrders isDead player
+                                
+                let units = applyMoves move_orders units
+
+                yield
+                    units
+                    |> growUnitTree embark_orders disembark_orders
+                    |> shrinkUnitTree embark_orders disembark_orders
+        |]
+
+    { gs with player_units = player_units }
