@@ -94,8 +94,12 @@ let growUnitTree (embark : EmbarkOrder[]) (disembark : DisembarkOrder[]) (units 
 
         for Disembark(index, path) in disembark do
             let unit = getUnitByIndex units index
-            let coords = path |> List.rev |> List.head
-            yield { unit with coords = coords }
+            yield
+                match path with
+                | [] -> unit
+                | _ :: _ ->
+                    let coords = path |> List.rev |> List.head
+                    { unit with coords = coords }
     |]
 
 let shrinkUnitTree (embark : EmbarkOrder[]) (disembark : DisembarkOrder[]) (units : UnitInfo[]) =
