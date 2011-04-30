@@ -155,8 +155,8 @@ let (|LandUnit|SeaUnit|AirUnit|Docked|Landed|) u =
     | Carrier(Docked, _) -> Docked
     | Fighter(Landed, _)
     | Bomber(Landed, _, _) -> Landed
-    | Transport _ | Destroyer _ | Submarine _ | Battleship _ | Carrier _ -> SeaUnit
-    | Fighter _ | Bomber _ -> AirUnit
+    | Transport (NotDocked, _) | Destroyer (NotDocked) | Submarine (NotDocked, _) | Battleship (NotDocked) | Carrier (NotDocked, _) -> SeaUnit
+    | Fighter (Airborne, _) | Bomber (Airborne, _, _) -> AirUnit
 
 let (|BomberWithBombs|_|) u =
     match u with
