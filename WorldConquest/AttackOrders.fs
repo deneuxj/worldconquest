@@ -75,7 +75,7 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
                     let attacker = getUnitByIndex gs.player_units.[player] attack.unit
                     for (PlayerId victim_player) as vp_id, victim_idx, _ in units do
                         let victim_unit = gs.player_units.[victim_player].[victim_idx]
-                        let bonus =
+                        let damage =
                             match attacker.specific, victim_unit.specific, attack.attack with
                             | Infantry, Infantry, Melee
                             | Tank, Tank, Melee
@@ -98,11 +98,11 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
                             | Fighter _, Battleship _, Melee
                             | Fighter _, Carrier _, Melee
                             | Fighter _, Fighter(Airborne, _), Melee
-                            | Bomber _, Bomber(Airborne, _, _), Melee -> 0.0f
+                            | Bomber _, Bomber(Airborne, _, _), Melee -> base_damage
 
-                            | BomberWithBombs _, Transport _, Remote -> +1.0f
-                            | BomberWithBombs _, AirUnit, Remote -> failwith "Bomber can't bomb airborne units"
-                            | BomberWithBombs _, _, Remote -> 0.0f
+                            | BomberWithBombs _, Transport _, Remote -> base_damage + 1.0f
+                            | BomberWithBombs _, AirUnit, Remote -> 0.0f
+                            | BomberWithBombs _, _, Remote -> base_damage
 
                             | Infantry, Tank, Melee
                             | Infantry, Submarine(Docked.Docked, _), Melee
@@ -141,7 +141,7 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
                             | Bomber _, Destroyer _, Melee
                             | Bomber _, Battleship _, Melee
                             | Bomber _, Carrier _, Melee
-                            | Bomber _, Submarine _, Melee -> 1.0f
+                            | Bomber _, Submarine _, Melee -> base_damage + 1.0f
 
                             | Infantry, Artillery, Melee
                             | Infantry, AntiAircraft, Melee
@@ -158,7 +158,7 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
                             | Battleship _, Destroyer _, Melee
                             | Battleship _, _, Remote
                             | AirUnit, Landed, Melee
-                            | Submarine _, Transport _, Melee -> 2.0f
+                            | Submarine _, Transport _, Melee -> base_damage + 2.0f
 
                             | Artillery, Infantry, Melee
                             | Artillery, Tank, Melee
@@ -174,15 +174,15 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
                             | Bomber _, AntiAircraft, Melee
                             | Bomber _, Fighter(Airborne, _), Melee
                             | Infantry, Destroyer(Docked.Docked), Melee
-                            | Infantry, Battleship(Docked.Docked), Melee -> -1.0f
+                            | Infantry, Battleship(Docked.Docked), Melee -> base_damage - 1.0f
 
-                            | Carrier _, Battleship _, Melee -> -2.0f
+                            | Carrier _, Battleship _, Melee -> base_damage - 2.0f
 
-                            | _ -> failwith <| sprintf "Invalid attack %A from %A on %A" attack.attack attacker victim_unit
+                            | _ -> 0.0f
 
-                        let damage = base_damage + bonus
-                        let health_points = getHealthPoints victim_unit.specific
-                        yield (vp_id, victim_idx, damage / health_points)
+                        if damage > 0.0f then
+                            let health_points = getHealthPoints victim_unit.specific
+                            yield (vp_id, victim_idx, damage / health_points)
 
                 | false, _ -> ()
         ]
@@ -200,17 +200,15 @@ let computeDamages (gs : GameState) (player : int) (orders : AttackOrder[]) =
                                 let victim_unit = gs.player_units.[victim_player].[victim_idx]
                                 yield
                                     match attacker.specific, victim_unit.specific, attack.attack with
-                                    // Catch some invalid cases (invalid attacks)
-                                    | Transport _, _, _ -> failwith "Transports cannot attack"
-                                    | SeaUnit, LandUnit, Melee
-                                    | Docked, LandUnit, Melee -> failwith "Naval units cannot melee-attack land units."
-                                    | LandUnit, SeaUnit, Melee -> failwith "Land units cannot melee-attack naval units at sea."
-                                    | AntiAircraft, LandUnit, Remote -> failwith "Anti-aircrafts cannot bombard land units."
-                                    | AntiAircraft, Landed, Remote -> failwith "Anti-aircrafts cannot bombard aircrafts on the ground."
-                                    | AntiAircraft, SeaUnit, Remote
-                                    | AntiAircraft, Docked, Remote -> failwith "Anti-aircrafts cannot bombard naval units."
-
                                     // The victim cannot fire back
+                                    | Transport _, _, _
+                                    | SeaUnit, LandUnit, Melee
+                                    | Docked, LandUnit, Melee
+                                    | LandUnit, SeaUnit, Melee
+                                    | AntiAircraft, LandUnit, Remote
+                                    | AntiAircraft, Landed, Remote
+                                    | AntiAircraft, SeaUnit, Remote
+                                    | AntiAircraft, Docked, Remote
                                     | _, _, Remote
                                     | _, Transport _, _
                                     | _, Landed, _ -> 0.0f
