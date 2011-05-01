@@ -37,41 +37,34 @@ let getUnitByIndex (units : UnitInfo[]) (idx : UnitIndex) =
                 | TransportedUnit.AntiAircraft (Health health) ->
                     { coords = transport.coords ;
                       health = health ;
-                      moves = anti_aircraft_range ;
                       specific = AntiAircraft }
                 | TransportedUnit.Artillery (Health health) ->
                     { coords = transport.coords ;
                       health = health ;
-                      moves = artillery_range ;
                       specific = Artillery }
                 | TransportedUnit.Infantry (Health health) ->
                     { coords = transport.coords ;
                       health = health ;
-                      moves = infantry_range ;
                       specific = Infantry }
                 | TransportedUnit.Tank (Health health) ->
                     { coords = transport.coords ;
                       health = health ;
-                      moves = tank_range ;
                       specific = Tank }
             | Carrier (_, units) ->
                 match units.[idx] with
                 | CarriedAircraft.Bomber (lifted, Health health) ->
                     { coords = transport.coords ;
                       health = health ;
-                      moves = bomber_range ;
                       specific = Bomber(Airborne, Fuel bomber_fuel_range, lifted) }
                 | CarriedAircraft.Fighter (Health health) ->
                     { coords = transport.coords ;
                       health = health ;
-                      moves = fighter_range ;
                       specific = Fighter(Airborne, Fuel fighter_fuel_range) }
             | Bomber (_, _, units) ->
                 match idx, units with
                 | 0, (BomberTransport.Infantry (Health health)) ->
                     { coords = transport.coords ;
                       health = health ;
-                      moves = infantry_range ;
                       specific = Infantry }
                 | 0, BomberTransport.Bombs _ ->
                     failwith "Incorrect unit index: leaf unit cannot be bombs"
@@ -89,7 +82,6 @@ let getUnitByIndex (units : UnitInfo[]) (idx : UnitIndex) =
                         | BomberTransport.Infantry (Health health) ->
                             { coords = carrier.coords ;
                               health = health ;
-                              moves = infantry_range ;
                               specific = Infantry }
                         | BomberTransport.Bombs _ -> failwith "Incorrect unit index: the bomber on the carrier is transporting bombs"
                     else

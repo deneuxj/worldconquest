@@ -80,7 +80,7 @@ let getOrder (gs : GameState) (player : int) =
                 ngbh
                 |> List.map(fun n -> dist (toHex n) c)
                 |> List.min
-            canMove distNgbh (unit.moves - 1)
+            canMove distNgbh (getMovementRange unit.specific - 1)
 
         let canBombard() =
             enemy_positions.Contains(destination)
@@ -186,7 +186,7 @@ let getOrder (gs : GameState) (player : int) =
                 | Some(_, None) -> true
                 | None -> false
             then
-                canMove (dist destination) unit.moves
+                canMove (dist destination) (getMovementRange unit.specific)
             else
                 None
 
@@ -202,7 +202,7 @@ let getOrder (gs : GameState) (player : int) =
                 | Some _
                 | None -> false
             then
-                canMove (dist destination) unit.moves
+                canMove (dist destination) (getMovementRange unit.specific)
             else
                 None
 
@@ -218,7 +218,7 @@ let getOrder (gs : GameState) (player : int) =
                 | Some _
                 | None -> false
             then
-                canMove (dist destination) unit.moves
+                canMove (dist destination) (getMovementRange unit.specific)
             else
                 None
 
@@ -254,7 +254,7 @@ let getOrder (gs : GameState) (player : int) =
             | Some x -> yield DockAt x
             | None -> ()
 
-            match canMove (dist destination) unit.moves with
+            match canMove (dist destination) (getMovementRange unit.specific) with
             | Some path -> yield Move path
             | None -> ()
         ]
@@ -281,14 +281,12 @@ let playerUnitMap (f : UnitIndex * UnitInfo -> 'T[]) g (units : UnitInfo[]) =
                     let u' =
                         {  coords = u.coords;
                            health = t.Health;
-                           moves = getMovementRange unit_type;
                            specific = unit_type  }
                     yield f (Transported(i, i2), u') |> Array.filter g
             | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
                 let u' =
                     {  coords = u.coords;
                        health = h;
-                       moves = getMovementRange Infantry
                        specific = Infantry  }
                 yield f (Transported(i, 0), u')
             | Carrier(_, aircrafts) ->
@@ -301,7 +299,6 @@ let playerUnitMap (f : UnitIndex * UnitInfo -> 'T[]) g (units : UnitInfo[]) =
                     let u' =
                         {  coords = u.coords;
                            health = plane.Health;
-                           moves = getMovementRange unit_type;
                            specific = unit_type  }
                     yield f (Transported(i, i2), u')
 
@@ -310,7 +307,6 @@ let playerUnitMap (f : UnitIndex * UnitInfo -> 'T[]) g (units : UnitInfo[]) =
                         let u'' =
                             {  coords = u.coords;
                                health = h;
-                               moves = getMovementRange Infantry
                                specific = Infantry  }
                         yield f (Transported2(i, i2, 0), u'')
                     | _ -> ()

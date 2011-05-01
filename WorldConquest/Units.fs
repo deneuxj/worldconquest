@@ -166,7 +166,6 @@ let (|BomberWithBombs|_|) u =
 type UnitInfo =
     {  coords : HexCoords
        health : float32
-       moves : int
        specific : UnitTypes  }
 with
     member x.IsDead =
