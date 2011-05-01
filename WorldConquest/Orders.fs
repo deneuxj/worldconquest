@@ -259,63 +259,67 @@ let getOrder (gs : GameState) (player : int) =
             | None -> ()
         ]
 
-// f maps a unit to a sequence of some generic data
-// g filters the generic data for units that are inside a transport.
-// g is needed to e.g. prevent artilleries to fire from transports.
-let playerUnitMap (f : UnitIndex * UnitInfo -> 'T[]) g (units : UnitInfo[]) =
-    [|
-        for i in 0..units.Length-1 do
-            let u = units.[i]
-            yield f (Root i, u)
 
-            match u.specific with
-            | Transport(_, transported) ->
-                for i2 in 0..transported.Length-1 do
-                    let t = transported.[i2]
-                    let unit_type =
-                        match t with
-                        | TransportedUnit.Infantry _ -> Infantry
-                        | TransportedUnit.Tank _ -> Tank
-                        | TransportedUnit.Artillery _ -> Artillery
-                        | TransportedUnit.AntiAircraft _ -> AntiAircraft
-                    let u' =
-                        {  coords = u.coords;
-                           health = t.Health;
-                           specific = unit_type  }
-                    yield f (Transported(i, i2), u') |> Array.filter g
-            | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
+let playerUnitZipIter (f : UnitIndex * UnitInfo * 'T -> unit) (units : UnitInfo[]) (xs : 'T[]) =
+    for i in 0..units.Length-1 do
+        let u = units.[i]
+        let x = xs.[i]
+        f(Root i, u, x)
+
+        match u.specific with
+        | Transport(_, transported) ->
+            for i2 in 0..transported.Length-1 do
+                let t = transported.[i2]
+                let unit_type =
+                    match t with
+                    | TransportedUnit.Infantry _ -> Infantry
+                    | TransportedUnit.Tank _ -> Tank
+                    | TransportedUnit.Artillery _ -> Artillery
+                    | TransportedUnit.AntiAircraft _ -> AntiAircraft
                 let u' =
                     {  coords = u.coords;
-                       health = h;
-                       specific = Infantry  }
-                yield f (Transported(i, 0), u')
-            | Carrier(_, aircrafts) ->
-                for i2 in 0..aircrafts.Length-1 do
-                    let plane = aircrafts.[i2]
-                    let unit_type =
-                        match plane with
-                        | CarriedAircraft.Fighter _ -> Fighter(Landed, Fuel fighter_fuel_range)
-                        | CarriedAircraft.Bomber (transported, _) -> Bomber(Landed, Fuel bomber_fuel_range, transported)
-                    let u' =
+                        health = t.Health;
+                        specific = unit_type  }
+                f(Transported(i, i2), u', x)
+        | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
+            let u' =
+                {  coords = u.coords;
+                    health = h;
+                    specific = Infantry  }
+            f(Transported(i, 0), u', x)
+        | Carrier(_, aircrafts) ->
+            for i2 in 0..aircrafts.Length-1 do
+                let plane = aircrafts.[i2]
+                let unit_type =
+                    match plane with
+                    | CarriedAircraft.Fighter _ -> Fighter(Landed, Fuel fighter_fuel_range)
+                    | CarriedAircraft.Bomber (transported, _) -> Bomber(Landed, Fuel bomber_fuel_range, transported)
+                let u' =
+                    {  coords = u.coords;
+                        health = plane.Health;
+                        specific = unit_type  }
+                f(Transported(i, i2), u', x)
+
+                match unit_type with
+                | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
+                    let u'' =
                         {  coords = u.coords;
-                           health = plane.Health;
-                           specific = unit_type  }
-                    yield f (Transported(i, i2), u')
+                            health = h;
+                            specific = Infantry  }
+                    f(Transported2(i, i2, 0), u'', x)
+                | _ -> ()
+        | _ -> ()
+    
 
-                    match unit_type with
-                    | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
-                        let u'' =
-                            {  coords = u.coords;
-                               health = h;
-                               specific = Infantry  }
-                        yield f (Transported2(i, i2, 0), u'')
-                    | _ -> ()
-            | _ -> ()
-    |]
+// Turn the unit tree into a flat array, and map each unit to an array.
+// This is used e.g. to generate all possible moves for each unit.
+// f maps a unit to an array of some generic data
+let playerUnitMap (f : UnitIndex * UnitInfo -> 'T[]) (units : UnitInfo[]) =
+    let res = new ResizeArray<'T[]>()
+    playerUnitZipIter (fun (idx, unit, _) -> res.Add(f(idx, unit))) units units
+    res.ToArray()
 
-
-let mkFetchOrderMap f (orders : 'O seq)=
-    let it = orders.GetEnumerator()
-    fun u ->
-        let order = it.MoveNext() |> fun _ -> it.Current
-        f (u, order)
+let playerUnitZipMap f units orders =
+    let res = new ResizeArray<'T[]>()
+    playerUnitZipIter (fun x -> res.Add(f x)) units orders
+    res.ToArray()

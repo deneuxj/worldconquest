@@ -10,13 +10,12 @@ type EmbarkOrder =
       unit : UnitIndex } // The unit embarking
 
 let extractEmbarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
-    let getUnitOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+    let getUnitOrder (idx : UnitIndex, u : UnitInfo, order : Order) =
         match order with
         | Order.Load (path, root_unit) -> [| { transporter = root_unit; unit = idx } |]
         | _ -> Array.empty
 
-    let fetchUnitOrder = mkFetchOrderMap getUnitOrder orders
-    playerUnitMap fetchUnitOrder (fun _ -> true) units
+    playerUnitZipMap getUnitOrder units orders
     |> Array.concat
 
 let filterDeadEmbarkOrders (isDead : PlayerId * UnitIndex -> bool) (player : int) (orders : EmbarkOrder[]) =
@@ -29,7 +28,7 @@ type DisembarkOrder = Disembark of UnitIndex * HexCoords list
 
 let extractDisembarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
     let early_orders =
-        let getEarlyOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+        let getEarlyOrder (idx : UnitIndex, u : UnitInfo, order : Order) =
             match idx with
             | Transported _
             | Transported2 _ ->
@@ -40,8 +39,7 @@ let extractDisembarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]
                 | _ -> Array.empty
             | _ -> Array.empty
 
-        let fetchUnitOrder = mkFetchOrderMap getEarlyOrder orders
-        playerUnitMap fetchUnitOrder (fun _ -> true) units
+        playerUnitZipMap getEarlyOrder units orders
         |> Array.concat
 
     let late_orders =
@@ -51,7 +49,7 @@ let extractDisembarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]
             | Transported (root, idx) -> Transported2(root, idx, sub)
             | Transported2 _ -> failwith "Transported2 cannot have children"
 
-        let getLateOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+        let getLateOrder (idx : UnitIndex, u : UnitInfo, order : Order) =
             match idx, order with
             | _, Order.Unload (_, target) ->
                 match u.specific with
@@ -80,8 +78,7 @@ let extractDisembarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]
             | Transported2 _, Order.Move path -> [| Disembark (idx, path) |]
             | _ -> Array.empty
 
-        let fetchUnitOrder = mkFetchOrderMap getLateOrder orders
-        playerUnitMap fetchUnitOrder (fun _ -> true) units
+        playerUnitZipMap getLateOrder units orders
         |> Array.concat
 
     (early_orders, late_orders)

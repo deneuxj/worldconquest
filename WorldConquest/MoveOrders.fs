@@ -11,7 +11,7 @@ type MoveOrder =
     | EarlyMove of int * HexCoords list
 
 let extractMoveOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
-    let getUnitOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+    let getUnitOrder (idx : UnitIndex, u : UnitInfo, order : Order) =
         match idx with
         | Root idx ->
             match order with
@@ -28,8 +28,7 @@ let extractMoveOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
             | _ -> Array.empty
         | _ -> Array.empty
             
-    let fetchUnitOrder = mkFetchOrderMap getUnitOrder orders
-    playerUnitMap fetchUnitOrder (fun _ -> true) units
+    playerUnitZipMap getUnitOrder units orders
     |> Array.concat
 
 let filterDeadMoveOrders (isDead : UnitIndex -> bool) (orders : MoveOrder[]) =

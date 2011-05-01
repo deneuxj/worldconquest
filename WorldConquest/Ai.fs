@@ -10,16 +10,42 @@ let getValidOrders (state : GameState) (player : int) =
     let getUnitOrders =
         getOrder state player
 
-    let getUnitOrders (_, u) =
+    let units = state.player_units.[player]
+
+    // Filter invalid orders for units on board of a transport.
+    let filterValidOrders idx orders =
+        match idx with
+        | Root _ -> orders
+        | Transported(root, _) ->
+            match units.[root].specific with
+            | Units.Transport _ ->
+                orders
+                |> List.filter (fun order ->
+                    match order with
+                    | Orders.Load _
+                    | Orders.Bombard _
+                    | Orders.DirectAttack _ -> false
+                    | Orders.DoNothing
+                    | Orders.Move _
+                    | Orders.Unload _ -> true
+                    | Orders.Bomb _
+                    | Orders.Conquer _
+                    | Orders.DirectAttack _
+                    | Orders.DockAt _
+                    | Orders.LandAt _ -> failwith <| sprintf "Invalid order %A for %A" order units.[root])
+            | _ -> orders
+        | _ -> orders
+
+    let getUnitOrders (idx, u) =
         let destinations =
             getAllWithin (getMovementRange u.specific)
             |> Array.filter (fun (HexCoords(_, y)) -> y >= 0 && y < width)
             |> Array.map (fromHex >> wrapX width >> toHex)
         destinations
-        |> Array.map (getUnitOrders u >> Array.ofList)
+        |> Array.map (getUnitOrders u >> filterValidOrders idx >> Array.ofList)
         |> Array.concat
 
-    playerUnitMap getUnitOrders (function Move _ -> true | _ -> false) state.player_units.[player]
+    playerUnitMap getUnitOrders units
 
 // Position evaluation functions
 

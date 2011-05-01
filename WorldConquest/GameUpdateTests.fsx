@@ -360,12 +360,19 @@ let randomTest() =
                     | 0 -> Orders.DoNothing
                     | n ->  orders.[rnd.Next(n - 1)]))
 
-        GameStateUpdate.update gs random_orders
+        let gs', getRootFromOldIdx = GameStateUpdate.update gs random_orders
+
+        let check() =
+            Seq.zip (Seq.initInfinite id) random_orders
+            |> Seq.fold (fun is_ok (i, player_orders) ->
+                is_ok                   
+               ) true                
+
+        gs'
 
     let mutable gs' = gs
     for i in 1 .. 10 do
         printfn "Starting round %d" i
-        let tmp, getRootFromOldIdx = doRound gs'
-        gs' <- tmp
+        gs' <- doRound gs'
 
     ()

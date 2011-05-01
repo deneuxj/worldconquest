@@ -19,7 +19,7 @@ type AttackOrder =
        attack : AttackType  }
 
 let extractAttackOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
-    let getUnitOrder ((idx : UnitIndex, u : UnitInfo), order : Order) =
+    let getUnitOrder (idx : UnitIndex, u : UnitInfo, order : Order) =
         let coords_and_attack =
             if
                 match idx with
@@ -48,8 +48,7 @@ let extractAttackOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
             |]
         | None -> Array.empty
 
-    let fetchUnitOrder = mkFetchOrderMap getUnitOrder orders
-    playerUnitMap fetchUnitOrder (fun _ -> true) units
+    playerUnitZipMap getUnitOrder units orders
     |> Array.concat
 
 
