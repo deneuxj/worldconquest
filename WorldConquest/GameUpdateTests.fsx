@@ -45,7 +45,7 @@ let assertTrue out txt = function
 
 let zeroTest() =
     let gs = default_gs
-    let gs' = GameStateUpdate.update gs [||]
+    let gs', _ = GameStateUpdate.update gs [||]
 
     assertTrue (printfn "%s") "ZERO" (gs = gs')
 
@@ -66,7 +66,7 @@ let moveTest() =
             player_units = [| Array.unzip units_and_orders |> fst |]
         }
 
-    let gs' = GameStateUpdate.update gs [| Array.unzip units_and_orders |> snd |]
+    let gs', _ = GameStateUpdate.update gs [| Array.unzip units_and_orders |> snd |]
 
     match gs'.player_units with
     | [| [| { coords = x } |] |] when x = goal -> true
@@ -103,12 +103,12 @@ let bombardTest() =
                 |]
         }
 
-    let gs' =
+    let gs', _ =
         GameStateUpdate.update gs
             [|
                 Array.unzip p0 |> snd ;
                 Array.unzip p1 |> snd
-            |]
+            |]        
 
     match gs'.player_units with
     | [| _; [| { health = x } |] |] when x < 1.0f -> true // Injured
@@ -149,7 +149,7 @@ let attackTest() =
 
     printfn "%A" gs
 
-    let gs' =
+    let gs', _ =
         GameStateUpdate.update gs
             [|
                 Array.unzip p0 |> snd ;
@@ -202,7 +202,7 @@ let stackAttackTest() =
 
     printfn "%A" gs
 
-    let gs' =
+    let gs', _ =
         GameStateUpdate.update gs
             [|
                 Array.unzip p0 |> snd ;
@@ -365,6 +365,7 @@ let randomTest() =
     let mutable gs' = gs
     for i in 1 .. 10 do
         printfn "Starting round %d" i
-        gs' <- doRound gs'
+        let tmp, getRootFromOldIdx = doRound gs'
+        gs' <- tmp
 
     ()

@@ -142,8 +142,9 @@ let getHealthPoints = function
     | AntiAircraft -> anti_aircraft_hp
     | Battleship _ -> battleship_hp
 
-let fighter_fuel_range = 18
-let bomber_fuel_range = 24
+// Number of turns aircrafts can be airborne.
+let fighter_fuel_range = 2
+let bomber_fuel_range = 3
 
 let (|LandUnit|SeaUnit|AirUnit|Docked|Landed|) u =
     match u with
