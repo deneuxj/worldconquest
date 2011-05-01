@@ -135,7 +135,7 @@ let shrinkUnitTree (embark : EmbarkOrder[]) (disembark : DisembarkOrder[]) (unit
     [|
         for root in 0 .. units.Length - 1 do
             let unit = units.[root]
-            if unit.health > 0.0f then
+            if not unit.IsDead then
                 match to_remove.TryGetValue(root) with
                 | false, _ -> yield unit
                 | true, [] -> () // Root itself was removed
