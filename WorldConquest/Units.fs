@@ -172,7 +172,8 @@ with
         x.health <= 0.0f
         ||
         match x.specific with
-        | Fighter(_, Fuel fuel) | Bomber (_, Fuel fuel, _) -> fuel < 0
+        | Fighter(Airborne, Fuel fuel) | Bomber (Airborne, Fuel fuel, _) -> fuel < 0
+        | Fighter(Landed.Landed, _) | Bomber (Landed.Landed, _, _)
         | Infantry _
         | Tank _
         | Artillery _
