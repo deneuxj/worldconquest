@@ -5,12 +5,21 @@ open HexTiling
 open Units
 open Terrain
 
+type MoveInfo =
+    { path : HexCoords list
+      unit : UnitIndex }
+
+type LoadInfo =
+    { path : HexCoords list
+      transport : int
+      unit : UnitIndex }
+
 type Order =
-    | Move of HexCoords list
+    | Move of MoveInfo
     | Bombard of HexCoords
     | Bomb of HexCoords * HexCoords list // Coords of target, path to bomb-dropping site.
     | Unload of HexCoords list * HexCoords // Applies to a transport, carrier or bomber, not the transported unit.
-    | Load of HexCoords list * int // Id of the transport, carrier or bomber.
+    | Load of LoadInfo
     | DirectAttack of HexCoords * HexCoords list // Coords of unit to attack, path to the site.
     | Conquer of HexCoords list
     | DockAt of HexCoords list
@@ -231,11 +240,13 @@ let getOrder (gs : GameState) (player : int) =
                 |> List.ofSeq
 
             match candidate_receivers with
-            | [] -> None
-            | idx :: _ ->
+            | [] -> []
+            | _ :: _ ->
                 match canMoveToNeighbour destination with
-                | Some path -> Some (path, idx)
-                | None -> None
+                | Some path ->
+                    candidate_receivers
+                    |> List.map (fun i -> Load { path = path; transport = i; unit = idx })
+                | None -> []
 
         let canConquer() =
             if
@@ -300,9 +311,7 @@ let getOrder (gs : GameState) (player : int) =
             | Some path -> yield DirectAttack (destination, path)
             | None -> ()
 
-            match canLoad() with
-            | Some x -> yield Load x
-            | None -> ()
+            yield! canLoad()
 
             match canUnload() with
             | Some x -> yield Unload x
@@ -317,17 +326,16 @@ let getOrder (gs : GameState) (player : int) =
             | None -> ()
 
             match canMove (dist destination) (getMovementRange unit.specific) with
-            | Some path -> yield Move path
+            | Some path -> yield Move { path = path; unit = idx }
             | None -> ()
         ]
         |> List.filter filterValidOrders
 
 
-let playerUnitZipIter (f : UnitIndex * UnitInfo * 'T -> unit) (units : UnitInfo[]) (xs : 'T[]) =
+let playerUnitZipIter (f : UnitIndex * UnitInfo * 'T -> unit) (units : UnitInfo[]) getNextX =
     for i in 0..units.Length-1 do
         let u = units.[i]
-        let x = xs.[i]
-        f(Root i, u, x)
+        f(Root i, u, getNextX())
 
         match u.specific with
         | Transport(_, transported) ->
@@ -343,13 +351,13 @@ let playerUnitZipIter (f : UnitIndex * UnitInfo * 'T -> unit) (units : UnitInfo[
                     {  coords = u.coords;
                         health = t.Health;
                         specific = unit_type  }
-                f(Transported(i, i2), u', x)
+                f(Transported(i, i2), u', getNextX())
         | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
             let u' =
                 {  coords = u.coords;
                     health = h;
                     specific = Infantry  }
-            f(Transported(i, 0), u', x)
+            f(Transported(i, 0), u', getNextX())
         | Carrier(_, aircrafts) ->
             for i2 in 0..aircrafts.Length-1 do
                 let plane = aircrafts.[i2]
@@ -361,7 +369,7 @@ let playerUnitZipIter (f : UnitIndex * UnitInfo * 'T -> unit) (units : UnitInfo[
                     {  coords = u.coords;
                         health = plane.Health;
                         specific = unit_type  }
-                f(Transported(i, i2), u', x)
+                f(Transported(i, i2), u', getNextX())
 
                 match unit_type with
                 | Bomber(_, _, BomberTransport.Infantry(Health h)) ->
@@ -369,7 +377,7 @@ let playerUnitZipIter (f : UnitIndex * UnitInfo * 'T -> unit) (units : UnitInfo[
                         {  coords = u.coords;
                             health = h;
                             specific = Infantry  }
-                    f(Transported2(i, i2, 0), u'', x)
+                    f(Transported2(i, i2, 0), u'', getNextX())
                 | _ -> ()
         | _ -> ()
     
@@ -379,10 +387,17 @@ let playerUnitZipIter (f : UnitIndex * UnitInfo * 'T -> unit) (units : UnitInfo[
 // f maps a unit to an array of some generic data
 let playerUnitMap (f : UnitIndex * UnitInfo -> 'T[]) (units : UnitInfo[]) =
     let res = new ResizeArray<'T[]>()
-    playerUnitZipIter (fun (idx, unit, _) -> res.Add(f(idx, unit))) units units
+    playerUnitZipIter (fun (idx, unit, _) -> res.Add(f(idx, unit))) units id
     res.ToArray()
 
-let playerUnitZipMap f units orders =
+let playerUnitZipMap f units (orders : 'O[]) =
+    let getNextOrder =
+        let i = ref 0
+        fun () ->
+            let r = orders.[!i]
+            i := !i + 1
+            r
+
     let res = new ResizeArray<'T[]>()
-    playerUnitZipIter (fun x -> res.Add(f x)) units orders
+    playerUnitZipIter (fun x -> res.Add(f x)) units getNextOrder
     res.ToArray()
