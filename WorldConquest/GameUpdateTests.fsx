@@ -14,7 +14,6 @@
 
 #load "Ai.fs"
 
-
 let width = 32
 
 let terr =
@@ -147,16 +146,12 @@ let attackTest() =
                 |]
         }
 
-    printfn "%A" gs
-
     let gs', _ =
         GameStateUpdate.update gs
             [|
                 Array.unzip p0 |> snd ;
                 Array.unzip p1 |> snd
             |]
-
-    printfn "%A" gs'
 
     match gs'.player_units with
     | [| _; [| { health = x } |] |] when x < 1.0f -> true // Injured
