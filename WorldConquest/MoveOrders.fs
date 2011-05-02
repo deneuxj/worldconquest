@@ -12,14 +12,21 @@ type MoveOrder =
 
 let extractMoveOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
     let getUnitOrder (idx : UnitIndex, u : UnitInfo, order : Order) =
+        
         match idx with
         | Root idx ->
+            match order with
+            | Order.Load { path = path; unit = unit }
+            | Order.Move { path = path; unit = unit } ->
+                if unit <> Root idx then failwith <| sprintf "UnitIndex inconsistency: %A <> Root %A" unit idx
+            | _ -> ()
+
             match order with
             | Order.Conquer path     
             | Order.DockAt path
             | Order.LandAt path
-            | Order.Load (path, _)
-            | Order.Move path
+            | Order.Load { path = path }
+            | Order.Move { path = path }
             | Order.Unload (path, _) -> [| LateMove(idx, path) |]
             
             | Order.Bomb (_, path)

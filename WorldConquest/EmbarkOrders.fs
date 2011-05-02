@@ -12,7 +12,9 @@ type EmbarkOrder =
 let extractEmbarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
     let getUnitOrder (idx : UnitIndex, u : UnitInfo, order : Order) =
         match order with
-        | Order.Load (path, root_unit) -> [| { transporter = root_unit; unit = idx } |]
+        | Order.Load { path = path; transport = root_unit; unit = transported } ->
+            if idx <> transported then failwith <| sprintf "Unit index inconsistency: idx = %A transport = %A transported = %A" idx root_unit transported
+            [| { transporter = root_unit; unit = idx } |]
         | _ -> Array.empty
 
     playerUnitZipMap getUnitOrder units orders
@@ -74,8 +76,8 @@ let extractDisembarkOrders (units : UnitInfo[]) (player : int) (orders : Order[]
                 | UnitTypes.Infantry
                 | UnitTypes.Submarine _
                 | UnitTypes.Tank -> failwith <| sprintf "Cannot unload all from %A" u
-            | Transported _, Order.Move path
-            | Transported2 _, Order.Move path -> [| Disembark (idx, path) |]
+            | Transported _, Order.Move { path = path }
+            | Transported2 _, Order.Move { path = path } -> [| Disembark (idx, path) |]
             | _ -> Array.empty
 
         playerUnitZipMap getLateOrder units orders

@@ -58,7 +58,7 @@ let moveTest() =
             { coords = start ;
                 health = 1.0f ;
                 specific = Units.UnitTypes.Tank },
-            Orders.Move ((findPath start goal).Value)
+            Orders.Move { path = (findPath start goal).Value; unit = GameState.Root 0 }
         |]
 
     let gs =
@@ -346,10 +346,8 @@ let randomTest() =
     let doRound (gs : GameState.GameState) =
         let possible_orders =
             [| for player in 0 .. gs.player_units.Length - 1 do
-                yield async { return Ai.getValidOrders gs player }
+                yield Ai.getValidOrders gs player
             |]
-            |> Async.Parallel
-            |> Async.RunSynchronously
 
         let random_orders =
             possible_orders
