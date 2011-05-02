@@ -262,8 +262,8 @@ let applyDamage (gs : GameState) (getDamage : (PlayerId * UnitIndex) -> float32)
     { gs with
         player_units =
             gs.player_units
-            |> Array.mapi (fun i units ->
-                let player = PlayerId i
+            |> Array.mapi (fun player units ->
+                let player = PlayerId player
                 units
                 |> Array.mapi (fun root unit ->
                         let unit =
