@@ -105,3 +105,5 @@ let getAllWithin n =
             |]
         cachedWithin.Add(n, v)
         v
+
+do for i in 0..20 do getAllWithin i |> ignore
