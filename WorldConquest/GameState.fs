@@ -20,6 +20,37 @@ with
         | true, res -> Some res
         | false, _ -> None
 
+    static member Create(terrain, resources : (HexCoords * Resource * PlayerId option) seq, player_units) =
+        let resource_at =
+            resources
+            |> Seq.map (fun (coords, rsc, owner) -> (coords, (rsc, owner)))
+            |> XNAUtils.SeqUtil.groupPairs
+            |> Seq.map (fun (coords, xs) -> (coords, Seq.head xs))
+            |> dict
+
+        let resources_of =
+            resources
+            |> Seq.choose (fun (coords, rsc, owner) ->
+                match owner with
+                | None -> None
+                | Some (PlayerId p) -> Some (p, (coords, rsc)))
+            |> XNAUtils.SeqUtil.groupPairs
+
+        let resources_of =
+            [|
+                for p in 0 .. Array.length player_units - 1 do
+                    yield
+                        resources_of
+                        |> Seq.choose (fun (idx, x) -> if idx = p then Some x else None)
+                        |> Seq.concat
+                        |> List.ofSeq
+            |]
+
+        { terrain = terrain ;
+          resource_at = resource_at ;
+          resources_of = resources_of ;
+          player_units = player_units }
+
 type UnitIndex =
     | Root of int
     | Transported of int * int // A unit inside another unit
