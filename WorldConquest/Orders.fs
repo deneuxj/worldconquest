@@ -9,8 +9,8 @@ type Order =
     | Move of HexCoords list
     | Bombard of HexCoords
     | Bomb of HexCoords * HexCoords list // Coords of target, path to bomb-dropping site.
-    | Unload of HexCoords list * HexCoords
-    | Load of HexCoords list * int // Id of the unit
+    | Unload of HexCoords list * HexCoords // Applies to a transport, carrier or bomber, not the transported unit.
+    | Load of HexCoords list * int // Id of the transport, carrier or bomber.
     | DirectAttack of HexCoords * HexCoords list // Coords of unit to attack, path to the site.
     | Conquer of HexCoords list
     | DockAt of HexCoords list
@@ -31,8 +31,70 @@ let getOrder (gs : GameState) (player : int) =
         distWrapSq width (fromHex c0) (fromHex c1)
         |> float32
 
-    fun (unit : UnitInfo) (destination : HexCoords) ->
+    let units = gs.player_units.[player]
+
+    fun (idx : UnitIndex) (destination : HexCoords) ->
+        let unit = getUnitByIndex units idx
         let dest_terrain = getHex gs.terrain destination
+
+        // Filter invalid orders depending on whether the units is on board another unit.
+
+        let filterValidOrders =
+            let transport_filter order =
+                match order with
+                | Load _
+                | Bombard _
+                | Conquer _
+                | DirectAttack _ -> false
+
+                | DoNothing
+                | Move _
+                | Unload _ -> true
+
+                | Bomb _
+                | DockAt _
+                | LandAt _ -> failwith <| sprintf "Invalid order %A for a land unit" order
+
+            let carrier_filter order =
+                match order with
+                | Unload _ // Bombers are allowed to unload their paratroopers while inside a carrier
+                | Move _
+                | Load _
+                | LandAt _
+                | DoNothing
+                | DirectAttack _
+                | Bomb _ -> true
+
+                | Bombard _
+                | Conquer _
+                | DockAt _ -> failwith <| sprintf "Invalid order %A for an aircraft" order
+                
+            let bomber_filter order =
+                match order with
+                | Move _
+                | DoNothing -> true
+
+                | DirectAttack _
+                | Conquer _
+                | Load _ -> false
+
+                | Unload _ -> failwith "Invalid unload order for an infantry"
+                | LandAt _ -> failwith "Invalid land order for an infantry"
+                | DockAt _ -> failwith "Invalid dock order for an infantry"
+                | Bombard _ -> failwith "Invalid bombard order for an infantry"
+                | Bomb _ -> failwith "Invalid bomb order for an infantry"
+                
+            let acceptAll _ = true
+
+            match idx with
+            | Root _ -> acceptAll
+            | Transported(root, _) ->
+                match units.[root].specific with
+                | Units.Transport _ -> transport_filter
+                | Units.Carrier _ -> carrier_filter
+                | Units.UnitTypes.Bomber _ -> bomber_filter
+                | _ -> acceptAll
+            | Transported2 _ -> bomber_filter
 
         let canMove dist max_moves =
             match unit.specific with
@@ -258,6 +320,7 @@ let getOrder (gs : GameState) (player : int) =
             | Some path -> yield Move path
             | None -> ()
         ]
+        |> List.filter filterValidOrders
 
 
 let playerUnitZipIter (f : UnitIndex * UnitInfo * 'T -> unit) (units : UnitInfo[]) (xs : 'T[]) =
