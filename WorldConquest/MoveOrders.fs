@@ -59,6 +59,22 @@ let applyMoves (orders : MoveOrder[]) (units : UnitInfo[]) =
             yield
                 match orders.TryGetValue(i) with
                 | false, _
-                | true, [] -> units.[i]
-                | true, (_ :: _ as path) -> { units.[i] with coords = path |> List.rev |> List.head }
+                | true, [] ->
+                    match units.[i] with
+                    | { specific = Fighter(landed, Fuel f) } as u -> { u with specific = Fighter(landed, Fuel (f - 1)) }
+                    | { specific = Bomber(landed, Fuel f, units) } as u -> { u with specific = Bomber(landed, Fuel (f - 1), units) }
+                    | u -> u
+                | true, (_ :: _ as path) ->
+                    let dest = path |> List.rev |> List.head
+                    match units.[i] with
+                    | { specific = Fighter(landed, Fuel f) } as u ->
+                        { u with
+                            coords = dest ;
+                            specific = Fighter(landed, Fuel (f - 1)) }
+                    | { specific = Bomber(landed, Fuel f, units) } as u ->
+                        { u with
+                            coords = dest ;
+                            specific = Bomber(landed, Fuel (f - 1), units) }
+                    | u ->                
+                        { u with coords = dest }
     |]
