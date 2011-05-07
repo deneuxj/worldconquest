@@ -7,6 +7,7 @@ open Orders
 open MoveOrders
 open EmbarkOrders
 open AttackOrders
+open DockOrders
 open Units
 
 let growUnitTree (embark : EmbarkOrder[]) (disembark : DisembarkOrder[]) (units : UnitInfo[]) =
@@ -225,6 +226,7 @@ let update (gs : GameState) (orders : Order[][]) =
                 let player_id = PlayerId player
                 let units = gs.player_units.[player]
                 let orders = orders.[player]
+                let dock_orders = extractDockOrders units orders
 
                 let isThisDead u = isDead(player_id, u)
                 let move_orders =
@@ -244,6 +246,7 @@ let update (gs : GameState) (orders : Order[][]) =
                 yield
                     units
                     |> growUnitTree embark_orders disembark_orders
+                    |> applyDockOrders dock_orders
                     |> shrinkUnitTree embark_orders disembark_orders
         |]
         |> Array.map Array.unzip

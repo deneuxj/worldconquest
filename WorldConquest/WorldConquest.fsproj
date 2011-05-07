@@ -58,6 +58,7 @@
     <Compile Include="MapCreation.fs" />
     <Compile Include="GameState.fs" />
     <Compile Include="Orders.fs" />
+    <Compile Include="DockOrders.fs" />
     <Compile Include="AttackOrders.fs" />
     <Compile Include="MoveOrders.fs" />
     <Compile Include="EmbarkOrders.fs" />
