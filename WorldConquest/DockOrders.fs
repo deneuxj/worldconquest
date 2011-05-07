@@ -39,8 +39,10 @@ let applyDockOrders (orders : DockOrder[]) (idx0_and_units : (UnitIndex option *
                         | { specific = Submarine(_, stealth) } as v -> { v with specific = Submarine(Docked, stealth) }
                         | { specific = Battleship(_) } as v -> { v with specific = Battleship(Docked) }
                         | { specific = Carrier(_, units) } as v -> { v with specific = Carrier(Docked, units) }
-                        | { specific = Fighter(_, Fuel f) } as v-> { v with specific = Fighter(Landed.Landed, Fuel (f - 1)) }
-                        | { specific = Bomber(_, Fuel f, units) } as v -> { v with specific = Bomber(Landed.Landed, Fuel (f - 1), units) }
+                        | { specific = Fighter(_, Fuel f) } as v->
+                            { v with specific = Fighter(Landed.Landed, Fuel fighter_fuel_range ) }
+                        | { specific = Bomber(_, Fuel f, units) } as v ->
+                            { v with specific = Bomber(Landed.Landed, Fuel bomber_fuel_range, units) }
                         | _ -> failwith <| sprintf "Unit %A cannot dock" unit
                 | None ->
                     (None, unit)
