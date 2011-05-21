@@ -52,14 +52,10 @@ with
           player_units = player_units }
 
 
-let captureResourceAt (pos : HexCoords) (PlayerId new_owner) (gs : GameState) =
-    let rsc =
-        match gs.getResourceAt pos with
-        | Some (rsc, _) -> rsc
-        | None -> failwith <| sprintf "Nothing to capture at %A" pos
+let captureResource (pos : HexCoords) (rsc : Resource) (PlayerId new_owner) resources_of =
 
     let resources_of =
-        gs.resources_of
+        resources_of
         |> Array.mapi (fun player rscs ->
             let rscs =
                 rscs

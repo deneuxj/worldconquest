@@ -21,7 +21,7 @@ type Order =
     | Unload of HexCoords list * HexCoords // Applies to a transport, carrier or bomber, not the transported unit.
     | Load of LoadInfo
     | DirectAttack of HexCoords * HexCoords list // Coords of unit to attack, path to the site.
-    | Conquer of HexCoords * HexCoords list
+    | Conquer of Resource.Resource * HexCoords * HexCoords list
     | DockAt of HexCoords list
     | LandAt of HexCoords list
     | DoNothing
@@ -249,19 +249,17 @@ let getOrder (gs : GameState) (player : int) =
                 | None -> []
 
         let canConquer() =
-            if
-                match unit.specific with
-                | LandUnit -> true
-                | _ -> false
-                &&
-                match gs.getResourceAt destination with
-                | Some(_, Some (PlayerId i)) -> i <> player
-                | Some(_, None) -> true
-                | None -> false
-            then
-                canMoveToNeighbour destination
-            else
-                None
+            match unit.specific, gs.getResourceAt destination with
+            | LandUnit, Some(rsc, Some (PlayerId i)) -> if i <> player then Some rsc else None
+            | LandUnit, Some(rsc, None) -> Some rsc
+            | LandUnit, None -> None
+            | _, _ -> None
+            |> function
+               | Some rsc ->
+                    match canMoveToNeighbour destination with
+                    | Some path -> Some (rsc, path)
+                    | None -> None
+               | None -> None
 
         let canDockAt() =
             if
@@ -297,7 +295,7 @@ let getOrder (gs : GameState) (player : int) =
 
         [
             match canConquer() with
-            | Some path -> yield Conquer (destination, path)
+            | Some (rsc, path) -> yield Conquer (rsc, destination, path)
             | None -> ()
 
             if canBombard() then

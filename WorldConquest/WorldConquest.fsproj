@@ -62,6 +62,7 @@
     <Compile Include="AttackOrders.fs" />
     <Compile Include="MoveOrders.fs" />
     <Compile Include="EmbarkOrders.fs" />
+    <Compile Include="ConquerOrders.fs" />
     <Compile Include="GameStateUpdate.fs" />
     <Compile Include="Ai.fs" />
     <None Include="Script.fsx" />

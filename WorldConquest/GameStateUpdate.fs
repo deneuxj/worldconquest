@@ -8,6 +8,7 @@ open MoveOrders
 open EmbarkOrders
 open AttackOrders
 open DockOrders
+open ConquerOrders
 open Units
 
 let growUnitTree (embark : EmbarkOrder[]) (disembark : DisembarkOrder[]) (units : UnitInfo[]) =
@@ -260,4 +261,18 @@ let update (gs : GameState) (orders : Order[][]) =
         | false, _ -> None
         | true, i -> Some (Root i)
 
-    { gs with player_units = Array.map snd player_units }, getRootFromOldIdx
+    let gs = { gs with player_units = Array.map snd player_units }
+
+    let gs =
+        seq { 0 .. gs.player_units.Length - 1 }
+        |> Seq.fold (fun resources_of player ->
+            let player_id = PlayerId player
+            let conquests = extractConquests player orders.[player]            
+            conquests
+            |> Array.fold (fun resources_of (rsc, pos) -> captureResource pos rsc player_id resources_of)
+                          resources_of
+           )
+           gs.resources_of
+        |> redict gs
+
+    gs, getRootFromOldIdx

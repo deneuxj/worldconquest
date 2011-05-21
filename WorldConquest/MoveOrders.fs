@@ -22,7 +22,7 @@ let extractMoveOrders (units : UnitInfo[]) (player : int) (orders : Order[]) =
             | _ -> ()
 
             match order with
-            | Order.Conquer (target, path) ->
+            | Order.Conquer (_, target, path) ->
                 [| LateMove(idx, (target :: (List.rev path)) |> List.rev) |]
             | Order.DockAt path
             | Order.LandAt path
