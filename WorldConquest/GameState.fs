@@ -51,6 +51,54 @@ with
           resources_of = resources_of ;
           player_units = player_units }
 
+
+let captureResourceAt (pos : HexCoords) (PlayerId new_owner) (gs : GameState) =
+    let rsc =
+        match gs.getResourceAt pos with
+        | Some (rsc, _) -> rsc
+        | None -> failwith <| sprintf "Nothing to capture at %A" pos
+
+    let resources_of =
+        gs.resources_of
+        |> Array.mapi (fun player rscs ->
+            let rscs =
+                rscs
+                |> List.filter (fun (p, _) -> pos <> p)
+    
+            if player = new_owner then
+                (pos, rsc) :: rscs
+            else
+                rscs)
+    
+    resources_of
+
+
+let redict (gs : GameState) resources_of =
+    let rsc_of_no_one =
+        gs.resource_at
+        |> Seq.choose(fun kvp ->
+            let pos = kvp.Key
+            let rsc, owner = kvp.Value
+            match owner with
+            | None -> Some (pos, (rsc, None))
+            | Some _ -> None)
+        |> List.ofSeq
+
+    let resource_at =
+        Seq.concat
+            [|
+                yield rsc_of_no_one
+                for i, rscs in Seq.zip (Seq.initInfinite id) gs.resources_of do
+                    let player = PlayerId i
+                    yield
+                        rscs
+                        |> List.map (fun (pos, rsc) -> pos, (rsc, Some player))
+            |]
+        |> dict
+
+    { gs with resource_at = resource_at ; resources_of = resources_of }
+
+
 type UnitIndex =
     | Root of int
     | Transported of int * int // A unit inside another unit
