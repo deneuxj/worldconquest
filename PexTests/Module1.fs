@@ -130,3 +130,30 @@ type GameStateUpdateTests() =
         PexAssume.AreElementsNotNull units
 
         growUnitTree embark disembark units
+
+
+    [<PexMethod>]
+    member x.TestCapture(terrain, player_units, resources, captures : (HexCoords * PlayerId)[]) =
+        PexAssume.IsNotNull(resources)
+        PexAssume.IsNotNull(captures)
+        PexAssume.AreElementsNotNull(resources)
+        PexAssume.AreElementsNotNull(captures)
+
+        let gs =
+            GameState.Create(terrain, resources, player_units)
+
+        let gs =
+            captures
+            |> Array.fold(fun gs (pos, player) ->
+                let ro = captureResourceAt pos player gs
+                { gs with resources_of = ro })
+                gs
+
+        let gs = redict gs gs.resources_of
+
+        PexAssert.IsTrue(
+            captures
+            |> Array.forall (fun (pos, player) ->
+                match gs.getResourceAt pos with
+                | Some (_, Some p) -> player = p
+                | _ -> false))

@@ -10,5 +10,4 @@ using Microsoft.Pex.Framework.Instrumentation;
 [assembly: PexInstrumentAssembly("WorldConquest")]
 [assembly: PexAssemblyUnderTest("WorldConquest")]
 [assembly: PexInstrumentAssembly("XNAUtils")]
-//[assembly: PexInstrumentType("WorldConquest", "PathFinding", InstrumentationLevel = PexInstrumentationLevel.Excluded)]
-//[assembly: PexInstrumentType("WorldConquest", "Ai", InstrumentationLevel = PexInstrumentationLevel.Excluded)]
+[assembly: PexInstrumentAssembly("WorldConquest")]

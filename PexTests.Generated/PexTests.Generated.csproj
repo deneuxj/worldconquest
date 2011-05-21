@@ -74,6 +74,9 @@
     <Compile Include="GameStateUpdateTestsGenerated.Test1.g.cs">
       <DependentUpon>GameStateUpdateTestsGenerated.cs</DependentUpon>
     </Compile>
+    <Compile Include="GameStateUpdateTestsGenerated.TestCapture.g.cs">
+      <DependentUpon>GameStateUpdateTestsGenerated.cs</DependentUpon>
+    </Compile>
     <Compile Include="GameStateUpdateTestsGenerated.TestFuelDecreases.g.cs">
       <DependentUpon>GameStateUpdateTestsGenerated.cs</DependentUpon>
     </Compile>
