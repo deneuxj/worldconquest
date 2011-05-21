@@ -21,7 +21,7 @@ type Order =
     | Unload of HexCoords list * HexCoords // Applies to a transport, carrier or bomber, not the transported unit.
     | Load of LoadInfo
     | DirectAttack of HexCoords * HexCoords list // Coords of unit to attack, path to the site.
-    | Conquer of HexCoords list
+    | Conquer of HexCoords * HexCoords list
     | DockAt of HexCoords list
     | LandAt of HexCoords list
     | DoNothing
@@ -259,7 +259,7 @@ let getOrder (gs : GameState) (player : int) =
                 | Some(_, None) -> true
                 | None -> false
             then
-                canMove (dist destination) (getMovementRange unit.specific)
+                canMoveToNeighbour destination
             else
                 None
 
@@ -297,7 +297,7 @@ let getOrder (gs : GameState) (player : int) =
 
         [
             match canConquer() with
-            | Some path -> yield Conquer path
+            | Some path -> yield Conquer (destination, path)
             | None -> ()
 
             if canBombard() then
