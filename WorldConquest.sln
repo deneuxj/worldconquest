@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Content", "Content\Content.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ContentLibrary", "ContentLibrary\ContentLibrary.csproj", "{20424926-D417-4507-9171-C1D26783FD07}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "XNAUtils", "..\..\xnautils\XNAUtils\XNAUtils.fsproj", "{EBFAB7EB-FF0B-4DE3-842B-BAB06DCD3D42}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "XNAUtils", "..\xnautils\XNAUtils\XNAUtils.fsproj", "{EBFAB7EB-FF0B-4DE3-842B-BAB06DCD3D42}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PexTests", "PexTests\PexTests.fsproj", "{C77A2B04-3996-42A1-AA0C-A25FD4E691B9}"
 EndProject
