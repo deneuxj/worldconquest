@@ -70,7 +70,7 @@
     <None Include="GameUpdateTests.fsx" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\xnautils\XNAUtils\XNAUtils.fsproj">
+    <ProjectReference Include="..\..\xnautils\XNAUtils\XNAUtils.fsproj">
       <Name>XNAUtils</Name>
       <Project>{ebfab7eb-ff0b-4de3-842b-bab06dcd3d42}</Project>
       <Private>True</Private>
