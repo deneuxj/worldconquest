@@ -146,6 +146,9 @@ let getHealthPoints = function
 let fighter_fuel_range = 2
 let bomber_fuel_range = 3
 
+// Number of bombs a bomber can transport
+let bomber_max_bombs = 2
+
 let (|LandUnit|SeaUnit|AirUnit|Docked|Landed|) u =
     match u with
     | Infantry | Tank | Artillery | AntiAircraft -> LandUnit

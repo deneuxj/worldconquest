@@ -346,7 +346,7 @@ units</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="128.0" x="79.0" y="225.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" fontFamily="Dialog" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="19.92626953125" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="110.24072265625" x="8.879638671875" y="5.036865234375">Update production</y:NodeLabel>
           <y:Shape type="rectangle"/>
@@ -357,7 +357,7 @@ units</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="74.0" x="74.0" y="285.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="56.6875" x="8.65625" y="5.6494140625">resources</y:NodeLabel>
           <y:Shape type="octagon"/>
@@ -368,7 +368,7 @@ units</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="74.0" x="178.0" y="285.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="54.6953125" x="9.65234375" y="5.6494140625">new units</y:NodeLabel>
           <y:Shape type="octagon"/>
@@ -379,7 +379,7 @@ units</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="128.0" x="183.0" y="917.705078125"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" fontFamily="Dialog" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="35.8525390625" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="130.4833984375" x="-1.24169921875" y="-2.92626953125">Concatenate new and
 old unit lists</y:NodeLabel>

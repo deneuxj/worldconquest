@@ -263,6 +263,28 @@ let update (gs : GameState) (orders : Order[][]) =
 
     let gs = { gs with player_units = Array.map snd player_units }
 
+    // Update production: produces updated list of resources and new units.
+    let tmp =
+        gs.resources_of
+        |> Array.map (fun pos_and_rscs ->
+            let min_rsc = Resource.countMinRsc (List.map snd pos_and_rscs)
+            List.foldBack (fun (pos, rsc) (num_min_rsc, new_units, rscs_and_pos) ->
+                let rsc, new_unit, num_min_rsc = Resource.updateProduction num_min_rsc rsc pos
+                (num_min_rsc,
+                 (match new_unit with
+                  | None -> new_units
+                  | Some u -> u :: new_units),
+                 ((pos, rsc) :: rscs_and_pos))
+                 )
+                pos_and_rscs
+                (min_rsc, [], [])
+            )
+
+    // Extract info from tmp
+    let new_units = Array.map (fun (_, new_units, _) -> new_units) tmp
+    let resources_of = Array.map (fun (_, _, rscs) -> rscs) tmp
+
+    // Capture resources, i.e. change owner of resources which have been captured.
     let gs =
         seq { 0 .. gs.player_units.Length - 1 }
         |> Seq.fold (fun resources_of player ->
@@ -272,7 +294,15 @@ let update (gs : GameState) (orders : Order[][]) =
             |> Array.fold (fun resources_of (rsc, pos) -> captureResource pos rsc player_id resources_of)
                           resources_of
            )
-           gs.resources_of
+           resources_of
         |> redict gs
+
+    // Add newly produced units to existing units.
+    let gs =
+        { gs with
+            player_units =
+                gs.player_units
+                |> Array.mapi (fun i units -> Array.concat [units; (new_units.[i] |> Array.ofList)])
+        }
 
     gs, getRootFromOldIdx
