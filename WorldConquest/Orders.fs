@@ -269,7 +269,7 @@ let getOrder (gs : GameState) (player : int) =
                 &&
                 match gs.getResourceAt destination with
                 | Some(Resource.Harbour, Some (PlayerId i))
-                | Some(Resource.Factory, Some (PlayerId i)) -> i = player
+                | Some(Resource.Factory _, Some (PlayerId i)) -> i = player
                 | Some _
                 | None -> false
             then

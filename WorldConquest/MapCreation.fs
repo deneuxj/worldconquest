@@ -61,7 +61,7 @@ let mkResources (terr : Terrain[,]) =
         [| 0.033; 0.033; 0.033; 0.033; 0.01 |]
 
     let rscs =
-        [| Oil; Wood; Iron; Factory; Airfield |]
+        [| Oil; Wood; Iron; Factory None; Airfield |]
 
     let harbour_prob = 0.05
 
