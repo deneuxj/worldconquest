@@ -62,6 +62,13 @@ let captureResource (pos : HexCoords) (rsc : Resource) (PlayerId new_owner) reso
                 |> List.filter (fun (p, _) -> pos <> p)
     
             if player = new_owner then
+                // Reset production.
+                // Without this, players can capture other people's units that are being produced,
+                // which could actually be an interesting variation.
+                let rsc =
+                    match rsc with
+                    | Factory _ -> Factory None
+                    | other -> other
                 (pos, rsc) :: rscs
             else
                 rscs)
