@@ -3,13 +3,15 @@
 #load "PathFinding.fs"
 #load "HexTiling.fs"
 #load "Terrain.fs"
-#load "Resource.fs"
 #load "Units.fs"
+#load "Resource.fs"
 #load "GameState.fs"
 #load "Orders.fs"
+#load "DockOrders.fs"
 #load "AttackOrders.fs"
 #load "MoveOrders.fs"
 #load "EmbarkOrders.fs"
+#load "ConquerOrders.fs"
 #load "GameStateUpdate.fs"
 
 #load "Ai.fs"
@@ -369,3 +371,51 @@ let randomTest() =
         gs' <- doRound gs'
 
     ()
+
+let testCapture() =
+    let u0 = ofSq(width / 2, width / 2)
+    let u1 = ofSq(width / 2 + 1, width / 2 + 1)
+    let rsc = Resource.Factory (Some { prod = Resource.Production.AntiAircraft; turns_left = 1 })
+
+    let player_units : (Units.UnitInfo)[][] =
+        [|
+            [|
+                { coords = u0 ;
+                    health = 1.0f ;
+                    specific = Units.UnitTypes.Tank }                
+            |]
+            [||]
+        |]
+
+    let order =
+        [|
+            [|
+                Orders.Conquer(rsc, u1, [])
+            |]
+            [||]
+        |]
+
+    let gs =
+        GameState.GameState.Create(
+            terr,
+            [(u1, rsc, Some (GameState.PlayerId 1))],
+            player_units)
+
+    let gs', _ = GameStateUpdate.update gs order
+
+    let good_length_p0 =
+        1 = Seq.length gs'.resources_of.[0]
+
+    let good_length_p1 =
+        0 = Seq.length gs'.resources_of.[1]
+    
+    let prod_reset =
+        gs'.resources_of.[0]
+        |> Seq.forall (fun (_, rsc) ->
+            match rsc with
+            | Resource.Factory None -> true
+            | _ -> false)
+
+    good_length_p0 |> assertTrue (printfn "%s") "Resource captured"
+    good_length_p1 |> assertTrue (printfn "%s") "Resource lost"
+    prod_reset |> assertTrue (printfn "%s") "Production of captured factory reset"
