@@ -88,19 +88,6 @@ let getMovementRange = function
     | AntiAircraft -> anti_aircraft_range
     | Battleship _ -> battleship_range
 
-let getHealth = function
-    | Infantry -> 1.0f
-    | Tank -> 2.0f
-    | Transport _ -> 1.0f
-    | Destroyer _ -> 5.0f
-    | Submarine _ -> 2.0f
-    | Carrier _ -> 3.0f
-    | Fighter _ -> 2.0f
-    | Bomber _ -> 1.0f
-    | Artillery -> 1.0f
-    | AntiAircraft -> 1.0f
-    | Battleship _ -> 7.0f
-
 // Production costs
 let infantry_cost = 2
 let tank_cost = 5
