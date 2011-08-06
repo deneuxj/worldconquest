@@ -403,7 +403,7 @@ units</y:NodeLabel>
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="108.0" x="638.0" y="60.0"/>
-          <y:Fill color="#FFCC00" transparent="false"/>
+          <y:Fill color="#99CC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="0.0" fontFamily="Dialog" fontSize="13" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="19.92626953125" modelName="internal" modelPosition="c" textColor="#000000" visible="true" width="48.08447265625" x="29.957763671875" y="5.036865234375">Healing</y:NodeLabel>
           <y:Shape type="rectangle"/>
