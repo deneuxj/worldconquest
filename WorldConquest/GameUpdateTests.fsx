@@ -419,3 +419,49 @@ let testCapture() =
     good_length_p0 |> assertTrue (printfn "%s") "Resource captured"
     good_length_p1 |> assertTrue (printfn "%s") "Resource lost"
     prod_reset |> assertTrue (printfn "%s") "Production of captured factory reset"
+
+let testProduction() =
+    let u0 = ofSq(width / 2, width / 2)
+    let fac0 = Resource.Factory (Some { prod = Resource.Production.AntiAircraft; turns_left = 1 })
+    let oil = Resource.Oil
+    let iron = Resource.Iron
+    let wood = Resource.Wood
+
+    let gs =
+        let no_units = [|[||];[||]|]
+        GameState.GameState.Create(
+            terr,
+            [(u0, fac0, Some (GameState.PlayerId 0))
+             (u0, fac0, Some (GameState.PlayerId 1))
+             (u0, oil, Some (GameState.PlayerId 1))
+             (u0, iron, Some (GameState.PlayerId 1))
+             (u0, wood, Some (GameState.PlayerId 1))],
+            no_units)
+
+    let gs', _ =
+        let no_orders = [|[||];[||]|]
+        GameStateUpdate.update gs no_orders 
+
+    let good_units_length_p0 =
+        0 = gs'.player_units.[0].Length
+
+    let prod_halted_p0 =
+        gs'.resources_of.[0]
+        |> Seq.forall (fun (_, rsc) -> fac0 = rsc)
+
+    let good_units_length_p1 =
+        1 = gs'.player_units.[1].Length
+
+    let prod_reset_p1 =
+        gs'.resources_of.[1]
+        |> Seq.forall (fun (_, rsc) ->
+            match rsc with
+            | Resource.Factory None -> true
+            | Resource.Oil | Resource.Wood | Resource.Iron -> true
+            | Resource.Factory (Some _ ) -> false
+            | _ -> false)
+
+    good_units_length_p0 |> assertTrue (printfn "%s") "Not enough resources, no unit produced"
+    prod_halted_p0 |> assertTrue (printfn "%s") "Not enough resources, production halted"
+    good_units_length_p1 |> assertTrue (printfn "%s") "New unit produced"
+    prod_reset_p1 |> assertTrue (printfn "%s") "Production completed and reset"
