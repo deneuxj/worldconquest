@@ -22,6 +22,8 @@ let terr =
     let inMid x = x >= width / 4 && x < 3 * width / 4
     Array2D.init width width (fun i j -> if inMid i && inMid j then Terrain.Land else Terrain.Sea)
 
+let default_factory_orders = Array.create 100 (Resource.ProductionOrders (fun _ -> Resource.Unchanged))
+
 let default_gs : GameState.GameState =
     { terrain = terr ;
         resource_at = [] |> dict ;
@@ -46,7 +48,7 @@ let assertTrue out txt = function
 
 let zeroTest() =
     let gs = default_gs
-    let gs', _ = GameStateUpdate.update gs [||]
+    let gs', _ = GameStateUpdate.update gs [||] default_factory_orders
 
     assertTrue (printfn "%s") "ZERO" (gs = gs')
 
@@ -67,7 +69,7 @@ let moveTest() =
             player_units = [| Array.unzip units_and_orders |> fst |]
         }
 
-    let gs', _ = GameStateUpdate.update gs [| Array.unzip units_and_orders |> snd |]
+    let gs', _ = GameStateUpdate.update gs [| Array.unzip units_and_orders |> snd |] default_factory_orders
 
     match gs'.player_units with
     | [| [| { coords = x } |] |] when x = goal -> true
@@ -109,7 +111,8 @@ let bombardTest() =
             [|
                 Array.unzip p0 |> snd ;
                 Array.unzip p1 |> snd
-            |]        
+            |]
+            default_factory_orders
 
     match gs'.player_units with
     | [| _; [| { health = x } |] |] when x < 1.0f -> true // Injured
@@ -154,6 +157,7 @@ let attackTest() =
                 Array.unzip p0 |> snd ;
                 Array.unzip p1 |> snd
             |]
+            default_factory_orders
 
     match gs'.player_units with
     | [| _; [| { health = x } |] |] when x < 1.0f -> true // Injured
@@ -205,6 +209,7 @@ let stackAttackTest() =
                 Array.unzip p0 |> snd ;
                 Array.unzip p1 |> snd
             |]
+            default_factory_orders
 
     printfn "%A" gs'
 
@@ -355,7 +360,7 @@ let randomTest() =
                     | 0 -> Orders.DoNothing
                     | n ->  orders.[rnd.Next(n - 1)]))
 
-        let gs', getRootFromOldIdx = GameStateUpdate.update gs random_orders
+        let gs', getRootFromOldIdx = GameStateUpdate.update gs random_orders default_factory_orders
 
         let check() =
             Seq.zip (Seq.initInfinite id) random_orders
@@ -401,7 +406,7 @@ let testCapture() =
             [(u1, rsc, Some (GameState.PlayerId 1))],
             player_units)
 
-    let gs', _ = GameStateUpdate.update gs order
+    let gs', _ = GameStateUpdate.update gs order default_factory_orders
 
     let good_length_p0 =
         1 = Seq.length gs'.resources_of.[0]
@@ -440,7 +445,7 @@ let testProduction() =
 
     let gs', _ =
         let no_orders = [|[||];[||]|]
-        GameStateUpdate.update gs no_orders 
+        GameStateUpdate.update gs no_orders default_factory_orders
 
     let good_units_length_p0 =
         0 = gs'.player_units.[0].Length
