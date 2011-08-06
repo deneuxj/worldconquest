@@ -17,6 +17,27 @@ type ProductionState =
     { prod : Production
       turns_left : int }
 
+type ProductionOrder =
+    | Unchanged
+    | Set of Production
+    | Clear
+
+type ProductionOrders = ProductionOrders of (HexTiling.HexCoords -> ProductionOrder)
+
+let getProductionCosts = function
+    | Production.Infantry -> Units.infantry_cost
+    | Production.AntiAircraft -> Units.anti_aircraft_cost
+    | Production.Tank -> Units.tank_cost
+    | Production.Transport -> Units.transport_cost
+    | Production.Artillery -> Units.artillery_cost
+    | Production.Destroyer -> Units.destroyer_cost
+    | Production.Submarine -> Units.submarine_cost
+    | Production.Battleship -> Units.battleship_cost
+    | Production.Carrier -> Units.carrier_cost
+    | Production.Fighter -> Units.fighter_cost
+    | Production.Bomber -> Units.bomber_cost
+    | _ -> failwith "Invalid production type value"
+
 type Resource =
     | Oil
     | Wood

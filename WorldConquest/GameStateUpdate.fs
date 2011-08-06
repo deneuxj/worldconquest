@@ -199,7 +199,11 @@ let shrinkUnitTree (embark : EmbarkOrder[]) (disembark : DisembarkOrder[]) (idx_
                     | UnitTypes.Tank -> failwith <| sprintf "Bad UnitIndex: %A can't transport units" unit
     |]
 
-let update (gs : GameState) (orders : Order[][]) =
+let update
+    (gs : GameState)
+    (orders : Order[][])
+    (production_orders : Resource.ProductionOrders[])
+    =
     let damages =
         seq {
             for player in 0 .. gs.player_units.Length - 1 do
@@ -263,9 +267,49 @@ let update (gs : GameState) (orders : Order[][]) =
 
     let gs = { gs with player_units = Array.map snd player_units }
 
+    // Update production: changes requested by players
+    let resources_of =
+        gs.resources_of
+        |> Array.mapi (fun player_idx pos_and_rscs ->
+            let (Resource.ProductionOrders getOrder) = production_orders.[player_idx]
+
+            pos_and_rscs
+            |> List.map(fun (pos, rsc) ->
+                pos
+                ,
+                match rsc, getOrder pos with
+                | Resource.Factory _, Resource.Clear -> Resource.Factory None
+                
+                | Resource.Factory _, Resource.Unchanged -> rsc
+                
+                | Resource.Factory(Some prod_state), Resource.Set prod ->
+                    if prod_state.prod = prod then
+                        rsc
+                    else
+                        let turns = Resource.getProductionCosts prod
+                        Resource.Factory(Some { prod = prod; turns_left = turns })
+                
+                | Resource.Factory None, Resource.Set prod ->
+                    let turns = Resource.getProductionCosts prod
+                    Resource.Factory(Some { prod = prod; turns_left = turns })
+                                    
+                | Resource.Airfield, Resource.Unchanged
+                | Resource.Harbour, Resource.Unchanged
+                | Resource.Oil, Resource.Unchanged
+                | Resource.Wood, Resource.Unchanged
+                | Resource.Iron, Resource.Unchanged -> rsc
+                
+                | Resource.Airfield, _
+                | Resource.Harbour, _
+                | Resource.Oil, _
+                | Resource.Wood, _
+                | Resource.Iron, _ -> failwith "Only factories can have their production changed"
+               )        
+           )
+
     // Update production: produces updated list of resources and new units.
     let tmp =
-        gs.resources_of
+        resources_of
         |> Array.map (fun pos_and_rscs ->
             let min_rsc = Resource.countMinRsc (List.map snd pos_and_rscs)
             List.foldBack (fun (pos, rsc) (num_min_rsc, new_units, rscs_and_pos) ->
