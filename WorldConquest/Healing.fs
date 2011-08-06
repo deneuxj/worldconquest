@@ -15,9 +15,9 @@ let healUnit (u : UnitInfo) order =
         | Destroyer(Docked.Docked)
         | Battleship(Docked.Docked)
         | Submarine(Docked.Docked, _)
-        | Artillery -> { u with health = min 1.0f (u.health + (Units.getHealthPoints u.specific)) }
+        | Artillery -> { u with health = min 1.0f (u.health + 1.0f / (Units.getHealthPoints u.specific)) }
 
-        | Infantry -> let bonus = 1.5f in { u with health = min 1.0f (u.health + bonus * (Units.getHealthPoints u.specific)) }
+        | Infantry -> let bonus = 1.5f in { u with health = min 1.0f (u.health + bonus / (Units.getHealthPoints u.specific)) }
 
         | _ -> u
     | _ -> u
