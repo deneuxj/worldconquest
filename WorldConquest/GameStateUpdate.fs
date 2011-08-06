@@ -204,6 +204,13 @@ let update
     (orders : Order[][])
     (production_orders : Resource.ProductionOrders[])
     =
+    let player_units =
+        Array.zip gs.player_units orders
+        |> Array.map (fun (units, orders) ->
+            Array.map2 Healing.healUnit units orders)
+
+    let gs = { gs with player_units = player_units }
+            
     let damages =
         seq {
             for player in 0 .. gs.player_units.Length - 1 do
